@@ -44,7 +44,7 @@ Neo N3 引入了原生合约（Native Contracts）的概念，系统功能通过
 
 ![memory_pool_1](persistence_memory_pool_1.png)
 
-```CSharp
+```csharp
 // Neo N3 内存池实现
 public class MemoryPool : IReadOnlyCollection<Transaction>
 {
@@ -101,7 +101,7 @@ Neo N3 移除了 UTXO 模型，采用更简洁的交易结构：
 | ? | **Script** | byte[] | 执行脚本 |
 | ?*? | **Witnesses** | Witness[] | 见证人列表 |
 
-```CSharp
+```csharp
 // Neo N3 交易验证
 public VerifyResult VerifyStateDependent(DataCache snapshot, TransactionVerificationContext context)
 {

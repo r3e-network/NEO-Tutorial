@@ -27,7 +27,7 @@ But the number 65535 is stored using 3 bytes:
 #### Integer serialization in code
 You can find [here](https://github.com/neo-project/neo/blob/b0793b74f25d817f826c4dca3f7f06a8b7dce88e/neo/IO/Helper.cs#L235) the code used to serialise integers in our C# version:
 
-``` CSharp
+```csharp
 
 public static void WriteVarInt(this BinaryWriter writer, long value)
 {
@@ -75,7 +75,7 @@ The string "NEO" is stored using 4 bytes:
 #### String serialization in code
 You can find [here](https://github.com/neo-project/neo/blob/b0793b74f25d817f826c4dca3f7f06a8b7dce88e/neo/IO/Helper.cs#L235) the code used to serialise strings in our C# version:
 
-``` CSharp
+```csharp
 public static void WriteVarString(this BinaryWriter writer, string value)
 {
   writer.WriteVarBytes(Encoding.UTF8.GetBytes(value));
@@ -90,7 +90,7 @@ public static void WriteVarBytes(this BinaryWriter writer, byte[] value)
 
 In special occasions NEO serializes a string with a fixed length. In this case, this is how we do it:
 
-``` CSharp
+```csharp
 public static void WriteFixedString(this BinaryWriter writer, string value, int length)
 {
   if (value == null)
@@ -118,7 +118,7 @@ A very common use for UInt160 are contract hashes:
 #### Contract hashing in code
 A simple contract can be created using the owner public key:
 
-``` CSharp
+```csharp
 public static byte[] CreateSignatureRedeemScript(ECPoint publicKey)
 {
   using (ScriptBuilder sb = new ScriptBuilder())
@@ -132,7 +132,7 @@ public static byte[] CreateSignatureRedeemScript(ECPoint publicKey)
 
 The resulting contract is a byte array. This byte array is converted to script-hash using the hash functions described earlier (RIPMED160):
 
-``` CSharp
+```csharp
 // https://github.com/neo-project/neo/blob/41caff115c28d6c7665b2a7ac72967e7ce82e921/neo/SmartContract/Helper.cs#L82
 public static UInt160 ToScriptHash(this byte[] script)
 {
@@ -155,7 +155,7 @@ The address is the script-hash of the contract, encoded in Bas58Check prefixed w
 #### Address conversion in code
 You can find [here](https://github.com/neo-project/neo/blob/a8fd76b715e675bc7982f26481ecfb9b6ea68811/neo/Wallets/Helper.cs#L16) an example of this code conversion. Note that the address is used for human communication only, in system operations we always use the script hash.
 
-``` CSharp
+```csharp
 public static string ToAddress(this UInt160 scriptHash)
 {
   byte[] data = new byte[21];
@@ -246,7 +246,7 @@ These transactions were used to emit the first NEO and GAS in the platform found
 
 #### Native asset emission in code
 The `GenesisBlock` code can be found [here](https://github.com/neo-project/neo/blob/41caff115c28d6c7665b2a7ac72967e7ce82e921/neo/Ledger/Blockchain.cs#L66).
-``` CSharp
+```csharp
 public static readonly Block GenesisBlock = new Block
 {
     PrevHash = UInt256.Zero,
@@ -298,7 +298,7 @@ public static readonly Block GenesisBlock = new Block
 ```
 
 NEO is represented as the "GoverningToken", and after it is registered, it is sent to the `Validators` multi-signature contract address:
-``` CSharp
+```csharp
 public static readonly RegisterTransaction GoverningToken = new RegisterTransaction
 {
   AssetType = AssetType.GoverningToken,
@@ -315,7 +315,7 @@ public static readonly RegisterTransaction GoverningToken = new RegisterTransact
 ```
 
 And GAS as the UtilityToken.
-``` CSharp
+```csharp
 public static readonly RegisterTransaction UtilityToken = new RegisterTransaction
 {
   AssetType = AssetType.UtilityToken,

@@ -46,7 +46,7 @@ If the `Storage`  returns a null transaction, either the transaction does not ex
 
 #### 0x01 - Blocks 
 
-```CSharp
+```csharp
 private void OnNewHeaders(Header[] headers)
         {
             using (Snapshot snapshot = GetSnapshot())
@@ -78,7 +78,7 @@ private void OnNewHeaders(Header[] headers)
 
 
 
-```CSharp
+```csharp
 public static bool ContainsBlock(this IPersistence persistence, UInt256 hash)
 {
   BlockState state = persistence.Blocks.TryGet(hash);
@@ -92,7 +92,7 @@ public static bool ContainsBlock(this IPersistence persistence, UInt256 hash)
 #### 0x02 - Transactions
 All transactions are stored under the Transactions prefix. The transactions are added individually by the consensus nodes and then committed in one block, these can be retrieved individually or in batches.
 
-```CSharp
+```csharp
 private bool AddTransaction(Transaction tx, bool verify)
 {
       if (verify && !tx.Verify(context.Snapshot, context.Transactions.Values))
@@ -144,7 +144,7 @@ A transaction is considered "unspent" if this it is not referenced as input by s
 
 This collection is used to determine if the coin is spendable. Here is how it's done in C#:
 
-``` CSharp
+```csharp
 public static bool IsDoubleSpend(this IPersistence persistence, Transaction tx)
 {
   if (tx.Inputs.Length == 0) return false;
@@ -165,7 +165,7 @@ Note that at this moment, we are not checking the memory pool. This is done befo
 NEO tracks the spent coins in order to allow users to `claim GAS`. The claimable GAS is calculated based on interval of blocks between the block where the transaction was created to the moment it is spent.   
 This means that, to be able to Claim GAS, you need to use that transaction. It is common to send it to yourself to "unlock" the claimable GAS.
 
-``` CSharp
+```csharp
 public Dictionary<ushort, SpentCoin> GetUnclaimed(UInt256 hash)
         {
     TransactionState tx_state = Transactions.TryGet(hash);
@@ -191,7 +191,7 @@ public Dictionary<ushort, SpentCoin> GetUnclaimed(UInt256 hash)
 #### 0x48 - Validators
 This collection is used to verify a block, since it is required to know the validators public keys in order to validate the multiple signatures contained in a block.  
 
-```CSharp
+```csharp
 private void Fill()
         {
             IEnumerable<Transaction> memoryPoolTransactions = Blockchain.Singleton.MemPool.GetSortedVerifiedTransactions();
@@ -238,7 +238,7 @@ This collection is not deprecated yet, however, with plans of moving native asse
 
 At code level, we can see that the Asset information is used to do additional verifications:
 
-``` CSharp
+```csharp
 public virtual bool Verify(Snapshot snapshot, IEnumerable<Transaction> mempool)
 {
     if (Size > MaxTransactionSize) return false;
@@ -300,7 +300,7 @@ Contracts are deployed using an **InvocationTransaction** and saved under this p
 This collection is not deprecated yet, however, with plans of moving meta-data to a `Manifest` file, there is a chance this collection becomes depreciated in the near future.
 
 In the check below, not only we check if the Smart Contract exists, but also if it can use the storage (deploying a contract that uses the storage is more expensive).
-``` CSharp
+```csharp
 internal bool CheckStorageContext(StorageContext context)
 {
   ContractState contract = Snapshot.Contracts.TryGet(context.ScriptHash);
@@ -311,7 +311,7 @@ internal bool CheckStorageContext(StorageContext context)
 ```
 
 Here is a verification done at runtime to ensure the contract has dynamic invoke flag:
-```CSharp
+```csharp
 private bool CheckDynamicInvoke()
 {
     Instruction instruction = CurrentContext.CurrentInstruction;
@@ -338,7 +338,7 @@ private bool CheckDynamicInvoke()
 This part of the storage is reserved for Smart Contract custom data storage. In this collection, we use the SmartContract script-hash as base prefix to all `Get` call executed by the ExecutionContext.
 
 Here is an example of it's usage. Note that it also sends the context script-hash in order to retrieve the data:
-```CSharp
+```csharp
 protected bool Storage_Get(ExecutionEngine engine)
 {
    if (engine.CurrentContext.EvaluationStack.Pop() is InteropInterface _interface)
@@ -364,7 +364,7 @@ Note that the `Block` collections is also changed when we get new headers becaus
 
 
 
-```CSharp
+```csharp
 private void OnNewHeaders(Header[] headers)
 {
    using (Snapshot snapshot = GetSnapshot())
@@ -399,7 +399,7 @@ private void OnNewHeaders(Header[] headers)
 The current block represents the highest block verified block, with it's transactions. We store it this information to know the latest (higher) synchronized block.
 The current blockchain height is defined by the height of the object in this key.
 
-``` CSharp
+```csharp
 public uint Height => BlockHashIndex.Get().Index;
 ```
 
@@ -408,7 +408,7 @@ Remember: A block **is** a block-header with additional information (transaction
 #### 0xc1 - Current header
 This prefix is used to store the latest(higher) block header. This is considered meta-data and is used only to help the node to synchronize it's data.
 
-```CSharp
+```csharp
 public override MetaDataCache<HashIndexState> GetHeaderHashIndex()
 {
   return new DbMetaDataCache<HashIndexState>(db, null, null, Prefixes.IX_CurrentHeader);
@@ -458,7 +458,7 @@ We can see it's usage in node code [here](https://github.com/neo-project/neo/blo
 
 Node usage:
 
-``` CSharp
+```csharp
 public LevelDBStore(string path)
 {
   this.db = DB.Open(path, new Options { CreateIfMissing = true });
@@ -480,7 +480,7 @@ public LevelDBStore(string path)
 
 Wallet usage:
 
-``` CSharp
+```csharp
 public WalletIndexer(string path)
 {
   path = Path.GetFullPath(path);

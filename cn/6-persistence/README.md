@@ -26,7 +26,7 @@ Neo N3 平台支持的原生数据类型有 Integer、ByteString、Array、Struc
 #### 整数序列化代码
 你可以点击[此处](https://github.com/neo-project/neo/blob/master/src/Neo/IO/Helper.cs)查看C#版本的整数序列化代码:
 
-``` CSharp
+```csharp
 public static void WriteVarInt(this BinaryWriter writer, long value)
 {
     if (value < 0)
@@ -74,7 +74,7 @@ public static void WriteVarInt(this BinaryWriter writer, long value)
 #### 字符串序列化代码
 你可以点击[此处](https://github.com/neo-project/neo/blob/master/src/Neo/IO/Helper.cs)查看C＃版本的序列化字符串的代码：
 
-``` CSharp
+```csharp
 public static void WriteVarString(this BinaryWriter writer, string value)
 {
     writer.WriteVarBytes(Encoding.UTF8.GetBytes(value));
@@ -99,7 +99,7 @@ UInt160最常用于计算合约的哈希值：
 #### 合约哈希代码
 在 Neo N3 中，合约哈希的计算方式有所改变。合约哈希由部署者的地址和合约的 NEF 校验和共同决定：
 
-``` CSharp
+```csharp
 // Neo N3 合约哈希计算
 public static UInt160 GetContractHash(UInt160 sender, uint nefCheckSum, string name)
 {
@@ -126,7 +126,7 @@ public static UInt160 ToScriptHash(this byte[] script)
 #### 地址转换代码
 你可以点击[此处](https://github.com/neo-project/neo/blob/master/src/Neo/Wallets/Helper.cs)查看地址转换的代码示例：
 
-``` CSharp
+```csharp
 public static string ToAddress(this UInt160 scriptHash, byte addressVersion)
 {
     Span<byte> data = stackalloc byte[21];
