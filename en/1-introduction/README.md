@@ -1,22 +1,20 @@
 ## Contents
 
-1. [Introduction to NEO](1-Introduction_to_NEO.md)
+1. [Introduction to Neo N3](1-Introduction_to_NEO.md)
 2. [Cryptography, Blockchain, and Smart Contracts](2-Cryptography_Blockchain_and_Smart_Contracts.md)
-3. [NEO Fundamentals](3-Fundamentals_of_NEO.md)
+3. [Neo N3 Fundamentals](3-Fundamentals_of_NEO.md)
 4. [NEO Tutorial](4-NEO_Tutorial.md)
 
 ## Additional Resources
 
-### Useful NEO Documentation
+### Useful Neo N3 Documentation
 
-* NEO Whitepaper - https://docs.neo.org/docs/en-us/basic/whitepaper.html
-* Technical Documentation - https://docs.neo.org/docs/en-us/index.html
-* Awesome NEO Docs - https://github.com/CityOfZion/awesome-neo-docs
+* Neo N3 Documentation - https://docs.neo.org/
+* Neo Developer Portal - https://developers.neo.org/
+* Neo GitHub - https://github.com/neo-project
 
-### NEO Development Communities
+### Neo Development Communities
 
-* COZ - [Website](https://cityofzion.io/) | [Github](https://github.com/CityOfZion/)
-* NeoResearch - [Website](https://neoresearch.io/) | [Github](https://github.com/NeoResearch)
-* NEO SPCC - [Website](https://nspcc.ru/en/) | [Github](https://github.com/CityOfZion/)
-* NewEconoLabs - [Website](https://nel.group/) | [Github](https://github.com/neweconolab/)
-* O3 Labs - [Website](https://o3.network/) | [Github](https://github.com/O3Labs/)
+* COZ (City of Zion) - [Website](https://coz.io/) | [Github](https://github.com/CityOfZion/)
+* Neo SPCC - [Website](https://nspcc.io/) | [Github](https://github.com/nspcc-dev/)
+* AxLabs (neow3j) - [Website](https://axlabs.com/) | [Github](https://github.com/neow3j/)
