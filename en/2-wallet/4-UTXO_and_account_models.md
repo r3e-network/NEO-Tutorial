@@ -1,21 +1,53 @@
-## UTXO Model
-One of the main functions of a wallet is to facilitate the transfer of assets. Assets on NEO are divided into two categories; UTXO-based (Unspent transaction outputs) and account-based. In NEO, NEO and GAS follow the UTXO model, while NEP-5 tokens follow the account model. Lets explore both in more detail.
+## Account Model in Neo N3
 
-First, let us consider a simple example where a user has 10 NEO. This 10 NEO actually consists of multiple UTXOs. The sum of all the UTXOs must equal 10. For example this 10 NEO may be consist of 3 UTXOs. UTXO_1 is worth 2 NEO, UTXO_2 is worth 3 NEO, and UTXO_3 is worth 5 NEO, which sums up to the total balance of 10 NEO. So if we need to send someone 3 NEO then we can simply use UTXO_2 3 as the input of the transaction, and the recipient receives as an output one UTXO that is also worth 3 NEO.
+One of the main functions of a wallet is to facilitate the transfer of assets. **Neo N3 uses a pure account model** for all assets, including the native NEO and GAS tokens. This is a significant change from Neo Legacy (Neo 2.x), which used the UTXO model for NEO and GAS.
 
-If we try to send 5 NEO, then we can combine the UTXO_1 and UTXO_2 together as the inputs, and the recipient recieves 5 NEO as one single output of the transaction. It becomes slightly more complicated when we need to send an amount where we cannot create a perfect sum of UTXOs. 
+### What Changed from Neo Legacy
 
-Let's say that we want to send 4 NEO to someone. No combination of our UTXOs will allows us to get get 4 exactly. The best we can do is use UTXO_1 and UTXO_2 together which will combine to equal 5 NEO. So we use UTXO_1 and UTXO_2 as the inputs to our transaction, but instead of having a single output as with the previous examples, we need to have two output UTXOs. One UTXO worth 4 NEO is generated for the recipient, and then a second UTXO worth 1 NEO is created and returned as change back to the sender's address.
+In Neo Legacy, NEO and GAS followed the UTXO (Unspent Transaction Output) model, similar to Bitcoin. Users had to manage UTXOs and handle "change" when sending assets. This added complexity to wallet implementations.
 
-For core NEO transactions, they must satisfy this formula in order to be considered valid on the network:
+**Neo N3 simplified this** by adopting a pure account model for everything:
+- NEO and GAS are now **Native Contracts** (NeoToken and GasToken)
+- All tokens follow the **NEP-17** standard (replacing NEP-5)
+- Balance tracking is straightforward - just a number associated with each address
 
-Sum(NEO_i) + Sum(GAS_i) = Sum(NEO_o) + (Sum(GAS_I) - Sum(GAS_sys_fee) - Sum(GAS_net_fee))
+### How the Account Model Works
 
-In this sense, UTXOs are not really created or destroyed, but are instead recycled into new ones. Inclusion of UTXOs allows for parallel transaction execution, as each UTXO is unique and therefore is impossible to double spend.
+The account model creates a global state for each account. Instead of having a set of UTXOs which must be combined for transactions, you simply have a balance associated with your account.
 
-## Account Model
-The account model, which is adopted by other blockchain platforms such as Ethereum, creates a global state for each account which has funds. Instead of having a set of UTXOs which can be used for a transaction, you would simply have a balance of 10 associated with your account. Because of this, the global state of all acounts must be store locally on the nodes in the network. Transactions are interpreted by the virtual machine in the network, and make the corresponding state changes to all accounts in the global state. 
+For example, if you have 10 NEO and want to send 4 NEO to someone:
+- Your balance: 10 NEO → 6 NEO
+- Recipient balance: 0 NEO → 4 NEO
 
-NEP-5 token contracts deployed on the NEO network typically follow the account model of balance storage. They do not have any associated UTXO data, and changes in balance state are handled via smart contract executions. These executions are interpreted by the NEO virtual machine, and recorded in the smart contract storage area.
+No need to worry about combining UTXOs or handling change - the virtual machine handles the state changes automatically.
+
+### NEP-17 Token Standard
+
+NEP-17 is the token standard for Neo N3, replacing the NEP-5 standard from Neo Legacy. All fungible tokens on Neo N3, including the native NEO and GAS tokens, implement the NEP-17 interface.
+
+The NEP-17 standard defines the following methods:
+- `symbol()` - Returns the token symbol
+- `decimals()` - Returns the number of decimals
+- `totalSupply()` - Returns the total token supply
+- `balanceOf(account)` - Returns the balance of an account
+- `transfer(from, to, amount, data)` - Transfers tokens between accounts
+
+Token transfers trigger the `Transfer` event, which wallets and explorers use to track token movements.
+
+### Native Contracts
+
+Neo N3 introduces **Native Contracts** - built-in contracts that are part of the Neo protocol itself. These include:
+
+| Contract | Description |
+|----------|-------------|
+| NeoToken | The NEO governance token |
+| GasToken | The GAS utility token |
+| PolicyContract | Network policy settings |
+| ContractManagement | Contract deployment/updates |
+| RoleManagement | Designation of special roles |
+| OracleContract | Oracle services |
+| LedgerContract | Blockchain data access |
+
+Native contracts provide standardized interfaces and are more efficient than regular smart contracts.
 
 [Return to contents](README.md#contents).

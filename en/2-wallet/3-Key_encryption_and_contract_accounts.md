@@ -14,9 +14,9 @@ NEO also supports more sophisticated account types. In these cases, the funds ar
 
 The most common case for this type of account is a multi-signature account. A multi-signature account requires that *N* of *X* people provides signatures for the transaction in order to transfer funds. For example, 2 out of 3 of the account owners must sign in order for the funds to be withdrawn.
 
-We can generate a simple contract for this account using NEO op codes. Suppose we want to create a multi-signature contract account for THREE different persons (public keys):
+We can generate a simple contract for this account using Neo opcodes. Suppose we want to create a multi-signature contract account for THREE different persons (public keys):
 
-**Important to note that we need to sort public keys by its ECPoint(X,Y) in ascending order before the operation otherwise we will get a different scripthash which leads to different NEO address.**
+**Important: Public keys must be sorted by their ECPoint(X,Y) in ascending order before creating the script, otherwise you will get a different script hash which leads to a different Neo address.**
 
 ```
 //pubkey1
@@ -29,42 +29,35 @@ We can generate a simple contract for this account using NEO op codes. Suppose w
 02e2baf21e36df2007189d05b9e682f4192a101dcdf07eed7d6313625a930874b4
 ```
 
-We want to require at least TWO of them to sign the transactions. So we must create a custom script for this purpose. The script is as follows:
-```
-// minimum number of signatures (2)
-PUSH OPCODE 52
-
-// attach all of the pubkeys
-PUSH PUBKEY 1
-PUSH PUBKEY 2
-PUSH PUBKEY 3
-
-//total number of public keys (3)
-PUSH OPCODE 53
-
-//CHECK MULTISIHG
-PUSH OPCODE AE
-```
-
-This results in the script:
+We want to require at least TWO of them to sign the transactions. In Neo N3, the multi-signature verification script format uses the SYSCALL opcode:
 
 ```
-5221036245f426b4522e8a2901be6ccc1f71e37dc376726cc6665d80c5997e240568fb210303897394935bb5418b1c1c4cf35513e276c6bd313ddd1330f113ec3dc34fbd0d2102e2baf21e36df2007189d05b9e682f4192a101dcdf07eed7d6313625a930874b453ae
+// Push minimum signatures required (2)
+PUSH 2
+
+// Push all public keys (using PUSHDATA1)
+PUSHDATA1 <pubkey1>
+PUSHDATA1 <pubkey2>
+PUSHDATA1 <pubkey3>
+
+// Push total number of public keys (3)
+PUSH 3
+
+// SYSCALL System.Crypto.CheckMultisig
+SYSCALL 0x9ED0DC3A
 ```
 
-We then calculate the script hash and address of this account with the methods that we have already described previously.
-
-Calculate the scripthash (and address): 4d0c0932fa032debdceaaf5cd8086cf3f882961f / AJetuB7TxUkSmRNjot1G7FL5dDpNHE6QLZ
-
-*Multi-sig example courtesy of NeoResearch*
+We then calculate the script hash and address of this account. In Neo N3, the resulting address will start with 'N' (using version byte 0x35).
 
 This contract information can also be stored in the NEP-6 file, which allows a user to keep track of accounts that are not necessarily associated with a single private key. More complex account types can be created using NEO's scripting capabilities. 
 
-Multi-signatures are currently supported in the [NEO-GUI](https://github.com/neo-project/neo-gui) and [neo-python](https://github.com/CityOfZion/neo-python) clients.
+Multi-signatures are supported in Neo N3 through various tools including [Neo-GUI](https://github.com/neo-project/neo-gui), [neon-js](https://github.com/CityOfZion/neon-js), and [neo-go](https://github.com/nspcc-dev/neo-go).
 
-### NEO DB3
-NEO db3 is a legacy file format that was previously supported in NEO-GUI prior to the introduction of the NEP-6 file format. It is highly reccommended to upgrade to NEP-6 file format, which can be done in NEO-GUI.
+### Wallet File Formats
 
-https://docs.neo.org/en-us/node/gui/wallet.html
+Neo N3 continues to use the **NEP-6** wallet format as the standard. The legacy DB3 format from Neo 2.x is no longer supported in Neo N3 tools.
+
+For more information on Neo N3 wallet management, see the official documentation:
+https://docs.neo.org/docs/n3/node/cli/cli.html
 
 [Next chapter](4-UTXO_and_account_models.md) or [return to contents](README.md#contents).

@@ -147,32 +147,39 @@ Assume private key, public key, and base point as *k*, *K*, and *G* respectively
 Deduction is as follows  
 ![](https://docs.neo.org/developerguide/en/images/blockchain_paradigm/formula_ecdsa.jpg)
 
-## NEO Address
-A NEO address is generated from the address script, which defines who can spend a transaction output.
+## Neo N3 Address
+A Neo address is generated from the verification script, which defines who can spend the assets associated with that address.
 
 Usually the script used is of the form:
 
-*PUSHBYTES21* opcode (*0x21*) + compressed public key (33 bytes) + *CHECKSIG* opcode (*0xAC*), meaning the output could be spent only by the owner of the private key for the specified public key.
+*PUSHDATA1* opcode (*0x0C*) + length (0x21 = 33) + compressed public key (33 bytes) + *SYSCALL* opcode (*0x41*) + *System.Crypto.CheckSig* hash (4 bytes), meaning the assets could be spent only by the owner of the private key for the specified public key.
 
-To calculate a NEO address from transaction script:
-1. Calculate SHA-256 hash of transaction script
+To calculate a Neo N3 address from verification script:
+1. Calculate SHA-256 hash of verification script
 2. Calculate RIPEMD-160 hash of the previous output (this is known as the script hash)
-3. Use Base58 check to encode previous output with the version 0x17 (meaning result will start with A)
+3. Use Base58 check to encode previous output with the version **0x35** (meaning result will start with **N**)
 
-Below you will find example code to generate a NEO address from a public key:
+**Note:** In Neo Legacy (Neo 2.x), addresses started with 'A' using version byte 0x17. Neo N3 addresses start with 'N' using version byte 0x35.
+
+Below you will find example code to generate a Neo N3 address from a public key:
 ```Go
-// ToNeoAddress converts a NEO public key to a NEO address string.
+// ToNeoAddress converts a Neo public key to a Neo N3 address string.
 func (pub *PublicKey) ToNeoAddress() (address string) {
 	/* Convert the public key to bytes */
 	pub_bytes := pub.ToBytes()
 
-	pub_bytes = append([]byte{0x21}, pub_bytes...)
-	pub_bytes = append(pub_bytes, 0xAC)
+	/* Build verification script for Neo N3 */
+	/* PUSHDATA1 (0x0C) + length (0x21) + pubkey + SYSCALL (0x41) + CheckSig hash */
+	script := []byte{0x0C, 0x21}
+	script = append(script, pub_bytes...)
+	script = append(script, 0x41)
+	// System.Crypto.CheckSig interop hash
+	script = append(script, 0x56, 0xE7, 0xB3, 0x27)
 
 	/* SHA256 Hash */
 	sha256_h := sha256.New()
 	sha256_h.Reset()
-	sha256_h.Write(pub_bytes)
+	sha256_h.Write(script)
 	pub_hash_1 := sha256_h.Sum(nil)
 
 	/* RIPEMD-160 Hash */
@@ -184,7 +191,8 @@ func (pub *PublicKey) ToNeoAddress() (address string) {
 	program_hash := pub_hash_2
 	
 	/* Convert hash bytes to base58 check encoded sequence */
-	address = B58checkencodeNEO(0x17, program_hash)
+	/* Neo N3 uses version 0x35 (addresses start with 'N') */
+	address = B58checkencodeNEO(0x35, program_hash)
 
 	return address
 }
