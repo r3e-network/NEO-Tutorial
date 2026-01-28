@@ -4,16 +4,18 @@ lang: en
 lang-ref: network-2
 ---
 
-## NEO Ping with Golang
+## NEO N3 Ping with Golang
 
-Although many [core libraries of NEO](https://github.com/neo-project/neo) are written in C# or Python, for this tutorial we will us [Golang](https://golang.org/). The communication basics are the same for all languages.
+Although many [core libraries of NEO](https://github.com/neo-project/neo) are written in C#, for this tutorial we will use [Golang](https://golang.org/). The communication basics are the same for all languages.
 
-The NEO protocol defines However, ia header and a payload. Every message needs to be sent with this specific format, with a 24 bytes header and its payload:
+> **Note**: This tutorial has been updated for Neo N3. The protocol structure is similar to Neo Legacy but with different magic numbers and some payload changes.
+
+The NEO protocol defines a header and a payload. Every message needs to be sent with this specific format, with a 24 bytes header and its payload:
 ```
  0                   1                   2                   3
  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                      Magic: 0x00746E41                        |
+|                      Magic: 0x334F454E                        |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |                                                               |
 +                                                               +
@@ -30,39 +32,46 @@ The NEO protocol defines However, ia header and a payload. Every message needs t
 ```
 Communication with other NEO nodes is handled via TCP or via [WebSockets](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API). The advantage of using WebSockets is that you could connect to a NEO node with a web browser, however in this tutorial we will use TCP.
 
-The header contains a 4 bytes magic, which stands for "Ant" (little-endian), the name that was used before the NEO rebranding. The testnet uses slightly different magic bytes, allowing messages to be distinguished between the MainNet and TestNet.
+The header contains a 4 bytes magic number. For Neo N3:
+- **MainNet**: `0x334F454E` ("NEO3" in ASCII, little-endian: `[4E][45][4F][33]`)
+- **TestNet**: `0x744E454E` ("NENt" in ASCII)
+
+This allows messages to be distinguished between different networks.
 
 ---
-**Exercise 1**:However, i
+**Exercise 1**:
 Please answer the following question:
 
 Although compatibility is very important and changing the format of the protocol could break many clients, what theoretical optimizations could be done in the protocol header?
 
 ---
 
-In order to participate in the NEO distributed system, firstly we need to open a connection to a NEO node. Since we want to issue ping/pong commands, which was released in NEO version 2.10.1 on 4. April 2019, we need to make sure that our node has this version. A list of NEO nodes with versions can be found here: [http://monitor.cityofzion.io/](http://monitor.cityofzion.io/). The following nodes announce this version at the time of writing:
+In order to participate in the NEO N3 distributed system, firstly we need to open a connection to a NEO node. Neo N3 nodes support ping/pong commands by default. You can find active Neo N3 seed nodes in the [official documentation](https://docs.neo.org/docs/n3/network/network-protocol.html).
 
-* node1.ledgercate.com:10333
-* seed.neoeconomy.io:10333
-* seed10.ngd.network:10333
+Some Neo N3 MainNet seed nodes:
+* seed1.neo.org:10333
+* seed2.neo.org:10333
+* seed3.neo.org:10333
+* seed4.neo.org:10333
+* seed5.neo.org:10333
 
-Please note that peers can go offline at any time, and those peers above may not be online anymore. Any other NEO node above v2.10.1 may be substituted.
+Please note that peers can go offline at any time, and those peers above may not be online anymore. Any other Neo N3 node may be substituted.
 
-These nodes must be well reachable on the respective port. The default port in the mainnet is 10333. In case a node is behind a firewall, a node can use UPnP to configure the router to accept incoming connection to the node. NAT-PMP is currently not supported. In our tutorial we won't accept any incoming connections, that means we don't have any NAT issues.
+These nodes must be well reachable on the respective port. The default P2P port for Neo N3 MainNet is 10333, and for TestNet is 20333. In case a node is behind a firewall, a node can use UPnP to configure the router to accept incoming connection to the node. NAT-PMP is currently not supported. In our tutorial we won't accept any incoming connections, that means we don't have any NAT issues.
 
 Let's implement the protocol. Here is what we need to do: first we set the magic number, then we set the command followed by the payload length. Then we calculate the checksum and append the payload. Now, we can send our packet to one of the NEO nodes. Sounds easy, right?
 
 ### Little-Endian vs. Big-Endian
 
-For every protocol, it must be defined which byte order is used. In case of NEO its little-endian. Thus, the magic byte will be encoded as follows:
+For every protocol, it must be defined which byte order is used. In case of NEO its little-endian. Thus, the magic byte for Neo N3 MainNet will be encoded as follows:
 
 ```
-0x00746E41 -> [41][6E][74][00]
+0x334F454E -> [4E][45][4F][33]
 ```
-Big-endian encoding would like as follows: [00][74][6E][41]. Many programming languages have utilities to handle the conversion, such as Golang:
+Big-endian encoding would look as follows: [33][4F][45][4E]. Many programming languages have utilities to handle the conversion, such as Golang:
 
 ```
-binary.LittleEndian.PutUint32(b[0:], 0x00746E41)
+binary.LittleEndian.PutUint32(b[0:], 0x334F454E)  // Neo N3 MainNet
 ```
 While most CPUs use little-endian encoding, network protocols such as TCP or UDP use big-endian. More information on endianness can be found in [https://en.wikipedia.org/wiki/Endianness](https://en.wikipedia.org/wiki/Endianness). For this tutorial we will use little-endian, as most data is encoded in little-endian in NEO, and we won't touch the exceptions.
 
@@ -81,9 +90,9 @@ If the checksum does not match, the node should ignore the message.
 **Exercise 2**:
 Write an encoder and decoder for the header. Use the following "quick and dirty" template in Appendix A and complete the following two functions: `encodeHeader(cmd string, payload []byte) []byte`, where the return array is the header combined with the payload. The encoder should return the whole byte array that can be sent on the wire, and `decodeHeader(b []byte) (uint32, uint32)`, where the first return value is the length of the payload and the second value is the checksum.
 
-Hint: the magic number can be encoded as:
+Hint: the magic number for Neo N3 MainNet can be encoded as:
 ```
-binary.LittleEndian.PutUint32(b[0:], 0x00746E41)
+binary.LittleEndian.PutUint32(b[0:], 0x334F454E)
 ```
 and decoded as:
 ```
@@ -178,10 +187,10 @@ fmt.Printf("time: %v\n", time.Unix(int64(binary.LittleEndian.Uint32(b[12:])), 0)
 ---
 
 ## Putting It together
-First, connect to a NEO node that supports ping/pong. We will check for the correct version later on.
+First, connect to a Neo N3 node that supports ping/pong.
 ```
 func main() {
-	remote, err := net.Dial("tcp", "node1.plutolo.gy:10333") //check: http://monitor.cityofzion.io/
+	remote, err := net.Dial("tcp", "seed1.neo.org:10333") // Neo N3 MainNet seed node
 	if err != nil {
 		panic(err)
 	}
@@ -218,21 +227,10 @@ On receiving the version from the NEO node, we additionally check the checksum t
 		panic(errors.New("checksum mismatch in version!"))
 	}
 ```
-Since ping/pong was only implemented recently, we need to make sure that we ask a supported version. It looks that the versions use semantic versioning. However, the Python implementation uses different versioning, so we should also check which user agent is used. As there is no other implementation with such a high version 2.10.1, we can just check this version (its quick and dirty :).
+In Neo N3, all nodes support ping/pong commands, so we don't need to check for a minimum version. However, you can still parse and display the user agent for informational purposes:
 ```
-	//check if we have a good version
-	start := strings.Index(userAgent, ":")
-	end := strings.Index(userAgent[start:], "/")
-	if start < 0 && end < 0 {
-		panic(errors.New(fmt.Sprintf("cannot parse version in %s", userAgent)))
-	}
-	semVer := userAgent[start+1:start+end]
-	fmt.Printf("parsed semver: %v\n", semVer)
-	v1, err := version.NewVersion(semVer)
-	min, err := version.NewVersion("2.10.1")
-	if v1.LessThan(min) {
-		panic(errors.New(fmt.Sprintf("%s is less than %s", v1, min)))
-	}
+	// Display the remote node's user agent (optional)
+	fmt.Printf("Remote user agent: %s\n", userAgent)
 ```
 
 Since we sent a version packet, we need to get the verack and we also need to send a verack, as we received the version as well:
@@ -326,14 +324,14 @@ import (
 )
 
 func main() {
-	remote, err := net.Dial("tcp", "node1.plutolo.gy:10333") //check: http://monitor.cityofzion.io/
+	remote, err := net.Dial("tcp", "seed1.neo.org:10333") // Neo N3 MainNet seed node
 	if err != nil {
 		panic(err)
 	}
 	defer remote.Close()
 	fmt.Println("Conneced to: %v", remote.RemoteAddr())
 
-	payloadVersion := encodeVersion("/The HSR NEO client:0.0.1/")
+	payloadVersion := encodeVersion("/Neo N3 Tutorial Client:0.0.1/")
 	packetVersion := encodeHeader("version", payloadVersion)
 	n, err := remote.Write(packetVersion)
 	if err != nil {
@@ -359,17 +357,8 @@ func main() {
 
 	//check if we have a good version
 	start := strings.Index(userAgent, ":")
-	end := strings.Index(userAgent[start:], "/")
-	if start < 0 && end < 0 {
-		panic(errors.New(fmt.Sprintf("cannot parse version in %s", userAgent)))
-	}
-	semVer := userAgent[start+1 : start+end]
-	fmt.Printf("parsed semver: %v\n", semVer)
-	v1, err := version.NewVersion(semVer)
-	min, err := version.NewVersion("2.10.1")
-	if v1.LessThan(min) {
-		panic(errors.New(fmt.Sprintf("%s is less than %s", v1, min)))
-	}
+	// In Neo N3, all nodes support ping/pong, so version check is optional
+	fmt.Printf("Remote user agent: %s\n", userAgent)
 
 	////////// got version, send ack
 	packetVerack := encodeHeader("verack", []byte{})
@@ -416,7 +405,7 @@ func main() {
 func encodeHeader(cmd string, payload []byte) []byte {
 	b := make([]byte, 24+len(payload))
 
-	binary.LittleEndian.PutUint32(b[0:], 0x00746E41)
+	binary.LittleEndian.PutUint32(b[0:], 0x334F454E) // Neo N3 MainNet magic
 	//encoding here
 	copy(b[4:], cmd)
 	//payload length
