@@ -1,21 +1,41 @@
 ## pBFT
 
+> **注意**: 本章节已更新至 Neo N3 版本，重点介绍 dBFT 2.0。
+
 有人认为，完全基于异步系统实现共识是不可能的，*M. Fischer, N. Lynch, and M. Paterson*于1985年在ACM期刊上发表的"具有单一故障过程的分布式共识的不可能性"一文提到。
 
 从这个意义上说，我们必须依靠同步的基本概念来提供网络的活性。
 
-可能[9]。我们保证系统活性，即客户端
-
 有关pBFT状态图的概述可以查看下图。![Neo 规范](https://github.com/NeoResearch/yellowpaper/blob/master/sections/graphviz-images/graphviz-pbft.jpg?raw=true)
 
-pBFT专为......而设计
+pBFT专为许可网络设计，是dBFT的理论基础。
 
 
-## dBFT
+## dBFT 2.0
 
 **免责声明:** *本教程的部分内容摘自[dBFT正式规范](https://github.com/NeoResearch/yellowpaper/blob/master/sections/08_dBFT.md)。*
 
-虽然前面提到的活性已经被证明可用于pBFT机制，但是dBFT的工作场景是现实中一个具有状态机副本机制的大型公有链。其中共享信息的性质不同，且信息不可泄露。为此，精细设计的恢复机制是dBFT机制的一部分。
+Neo N3 采用 **dBFT 2.0**，相比 dBFT 1.0 有重大改进：
+
+### dBFT 2.0 vs dBFT 1.0 对比
+
+| 特性 | dBFT 1.0 | dBFT 2.0 |
+|------|----------|----------|
+| **恢复机制** | 基础 | 增强的 Recovery 消息 |
+| **视图更改** | 可能导致分叉 | 安全的视图更改 |
+| **Commit 锁定** | 存在问题 | 已解决 |
+| **网络稳定性** | 一般 | 显著提升 |
+
+### dBFT 2.0 消息类型
+
+```
+ChangeView     = 0x00,  // 请求更改视图
+PrepareRequest = 0x20,  // 议长发起的准备请求
+PrepareResponse= 0x21,  // 备份节点的准备响应
+Commit         = 0x30,  // 提交消息
+RecoveryRequest= 0x40,  // 恢复请求
+RecoveryMessage= 0x41   // 恢复消息
+```
 
 下图为当前dBFT 2.0的状态图
 
@@ -23,7 +43,27 @@ pBFT专为......而设计
 
 ### 一区块终局性
 
-一区块终局性为现实世界的应用程序带来了显著的优势。例如，终端用户，商家和交易所可以确保他们的交易已被最终处理，并且不可能被撤销。虽然NEO生态系统是为托管的去中心化应用程序（DApps）设计的，但值得注意的是，持久化的SC交易（涉及状态机复制（SMR）并且是部分DApp的核心功能）会带来一系列独特的挑战。由于共识节点无法公开和显示任何重复区块的信息，因此保证区块终局性是一项棘手的任务。从这个意义上讲，只有当大多数共识节点已经达成协议时，才应提供区块的签名。
+一区块终局性为现实世界的应用程序带来了显著的优势。例如，终端用户，商家和交易所可以确保他们的交易已被最终处理，并且不可能被撤销。
+
+**Neo N3 的终局性保证：**
+- 区块一旦被确认，永不回滚
+- 无需等待多个确认（对比比特币需要 6 个确认）
+- 适合金融应用和 DeFi 场景
+
+```csharp
+// Neo N3 区块确认逻辑
+public bool VerifyBlock(Block block, DataCache snapshot)
+{
+    // 验证见证人签名数量 >= M (2f+1)
+    var validators = NativeContract.NEO.GetNextBlockValidators(snapshot, 
+        ProtocolSettings.Default.ValidatorsCount);
+    
+    int m = validators.Length - (validators.Length - 1) / 3;
+    
+    // 验证多签
+    return block.Witness.VerifyMultiSig(block.Hash, validators, m);
+}
+```
 
 这个问题被称为**不知疲倦的矿工问题**（在此定义）：
 
@@ -33,14 +73,29 @@ pBFT专为......而设计
 1. 挖掘的时间：他们会不停地挖掘，直到他们找到氪石（在发现氪石前不会去任何其他地方进行挖掘）。氪石是一种无限可分的晶体，因此，一旦有人挖掘到氪石，他就可共享以便所有人都能拥有一块氪石从而履行完他们的合约（3.）;
 1. 如果有人死亡了，当有其他人加入时，他将看到先前签署的协议（3.），并自动开始挖掘。其他小部分人也会遇到相同的问题，可以通过隐藏的信息来告知他们也应该进行挖掘。
 
-### 出块更改视图且给予网络额外的时间
+### dBFT 2.0 视图更改与恢复机制
 
-为了保持活性，需要保证系统具备一些额外的性质：
+为了保持活性，dBFT 2.0 引入了改进的视图更改和恢复机制：
+
+**视图更改触发条件：**
+- 议长超时未发送 PrepareRequest
+- 收到无效的提案
+- 网络分区恢复后状态不一致
+
+**Recovery 消息机制（dBFT 2.0 新增）：**
+```csharp
+// 恢复消息包含当前共识状态
+public class RecoveryMessage : ConsensusMessage
+{
+    public PrepareRequest PrepareRequestMessage;
+    public Dictionary<int, byte[]> PreparationMessages;
+    public Dictionary<int, byte[]> CommitMessages;
+    public byte[] ViewChangeMessages;
+}
+```
 
  - 如果节点不相信当前的网络拓扑结构，则应阻止节点提交它们的签名（请求`更改视图`）。
 
-然而，在实际操作中dBFT在某些情况下会失去活性，其中节点仅仅只是出现了网络问题，可概括为Commit阶段锁定。该类问题的解决方法是引入计数机制，用于检查已提交的节点（易于检查）和故障节点（超过一个区块高度没有收到过其共识信息的共识节点）。在要求改变视图之前，该机制提供了额外的保护措施。
-
-同时，设计的另一个策略是当节点看到网络有进展时，避免`更改视图`。每次节点与其他节点共享签名信息时，会将额外的超时信息添加到它们的内部计时器中，表明节点正在参与共识并与其他节点进行通信。
+然而，在 dBFT 2.0 中，Commit 阶段锁定问题已得到解决。当节点进入 Commit 阶段后，即使发生视图更改，也能通过 Recovery 消息恢复状态。
 
 [点击此链接开始学习](4-dBFT共识示例与场景.md)或者[返回目录](README.md#目录)

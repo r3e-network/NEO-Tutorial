@@ -1,14 +1,17 @@
 ## Watch-only模式的共识节点
 
-正如可以在[网络教程](linkToNetworkTODO)中验证的那样，NEO网络以完全分布式的方式运行，如上图所示，摘自[Medium文章](https://medium.com/neoresearch/understanding-neo-network-in-five-pictures-e51b7c19d6e0):
+> **注意**: 本章节已更新至 Neo N3 版本。
+
+正如可以在网络教程中验证的那样，NEO网络以完全分布式的方式运行。
 
 ![转发交易，直至达到共识节点（绿色）](https://cdn-images-1.medium.com/max/800/1*vKbm_Di8GgQep8SyKeAWNw.png)
 
-绿色框代表共识，可出现在节点池中。消息全部广播给相邻节点（最好的情况下）。具有特殊功能的节点可以设计为仅监控来自共识节点的P2P消息，可以访问[NeoCompiler Eco共享私有链](https://neocompiler.io/#!/ecolab/cnnodesinfo)来查看相关信息。
+绿色框代表共识节点。消息全部广播给相邻节点。具有特殊功能的节点可以设计为仅监控来自共识节点的P2P消息。
 
-![仅限监视节点的信息](./watch-only-node.png)
-
-在这个图中，该Watch-Only节点还具有RPC功能。值得注意的是，节点可以具有其他特性并整理任意管理该客户端的节点所需的信息，如[教程](./linkToPluginsTodo)中所强调的那样。
+**Neo N3 共识节点配置：**
+- 主网：21 个共识节点
+- 测试网：7 个共识节点
+- 私有链：可自定义（最少 4 个）
 
 ## dBFT 场景
 
@@ -26,9 +29,33 @@
 
 通过使用这7个共识节点并结合他们的优点，我们会给出一些例子让读者了解dBFT机制的工作原理：
 
-### 创世块
+### 创世块 (Neo N3)
 
-创世块创建了3个交易，其中原生资产NEO和GAS在该块中注册并创建，并转移到当前验证人的账户中（由这7个角色组成的多签名账户）;
+Neo N3 的创世块与 Neo Legacy 有显著不同：
+
+- **无资产注册交易**：NEO 和 GAS 作为原生合约存在
+- **原生合约部署**：所有原生合约在创世块初始化
+- **初始 NEO 分配**：1 亿 NEO 分配给多签地址
+
+```csharp
+// Neo N3 创世块结构
+public static Block Genesis => new()
+{
+    Header = new Header
+    {
+        Version = 0,
+        PrevHash = UInt256.Zero,
+        MerkleRoot = UInt256.Zero,
+        Timestamp = (new DateTime(2021, 3, 1, 0, 0, 0, DateTimeKind.Utc)).ToTimestampMS(),
+        Nonce = 2083236893,
+        Index = 0,
+        PrimaryIndex = 0,
+        NextConsensus = GetConsensusAddress(StandbyValidators),
+        Witness = new Witness { ... }
+    },
+    Transactions = Array.Empty<Transaction>()
+};
+```
 
 ### 情况 1 (正常运行)
 
@@ -66,39 +93,42 @@
 - 每个节点设计为只接受每个`视图`下的单的提案。在大多数`M = 2f+1`个节点不能就同一个提案达成共识之前(通过`hash`汇总)，不会提交任何节点。
 - 如果`M`个节点提交了而另外的`f = 2`个节点缓存了一个不同的提案块，它们将在某个时刻收到一条`Recover`消息, 这将允许它们匹配哈希值。如果哈希值不同，我们将有一个针对这个议长节点的反证，这肯定会使得NEO持有者将这个节点从验证人中删除。
 
-## 一个由4个节点组成的共识
+## Neo N3 多签账户
 
-正如你可能知道的那样，NEO区块链2.x中的地址由`21`（表示[“向计算栈推送34个字节”](https://github.com/neo-project/neo-vm/blob/f81c3039d5fb4417b3c1ad780378c7f92499964a/src/neo-vm/OpCode.cs＃L144)）、 公钥和`ac`（操作码，用于调用一个脚本来对地址见证人执行验证）组成。
+Neo N3 的地址格式有重大变化：
+- **地址前缀**：所有 N3 地址以 `N` 开头（版本号 0x35）
+- **脚本格式**：使用新的验证脚本结构
 
-建议读者看看以下文章：
+### 多签脚本结构
 
- -  [了解NEO的多方签名](https://medium.com/neoresearch/understanding-multisig-on-neo-df9c9c1403b1)。
+```
+[签名数量] [公钥1] [公钥2] ... [公钥n] [公钥数量] CHECKMULTISIG
+```
 
-让我们考虑具有以下公钥的节点（21 + rootOfPubKey + ac）：
+示例（3/4 多签）：
+```
+13  // PUSH3 (需要3个签名)
+21 02...6e  // 公钥1
+21 02...62  // 公钥2  
+21 02...c2  // 公钥3
+21 03...99  // 公钥4
+14  // PUSH4 (共4个公钥)
+0b  // SYSCALL
+41138def...  // System.Crypto.CheckMultisig
+```
 
- -  N1：`2102103a7f7dd016558597f7960d27c516a4394fd968b9e65155eb4b013e4040406eac`
- -  N2：`2102a7bc55fe8684e0119768d104ba30795bdcc86619e864add26156723ed185cd62ac`
- -  N3：`2102b3622bf4017bdfe317c58aed5f4c753f206b7db896046fa7d774bbc4bf7f8dc2ac`
- -  N4：`2103d90c07df63e690ce77912e10ab51acc944b66860237b608c4f8f8309e71ee699ac`
+### 地址转换
 
-可以使用以下脚本来创建一个多方签名账户：
-
-`532102103a7f7dd016558597f7960d27c516a4394fd968b9e65155eb4b013e4040406e2102a7bc55fe8684e0119768d104ba30795bdcc86619e864add26156723ed185cd622102b3622bf4017bdfe317c58aed5f4c753f206b7db896046fa7d774bbc4bf7f8dc22103d90c07df63e690ce77912e10ab51acc944b66860237b608c4f8f8309e71ee69954ae`
-
-解读为：`53`（签名个数）+`21` +`02 ... 6e` +`21` + `02 ... 62` +`21` + `02 ... c2` +`21`+`03 ... 99` +`54`（公钥所有者个数）+`ae`
-
-我们选择这4个节点作为验证人节点，下面的脚本将为每个区块提供签名，地址如下：`AZ81H31DMWzbSnFDLFkzh9vHwaDLayV7fU`。后者可以通过将该脚本转换为“大端存储的脚本哈希”然后再进行base-58编码来获取。如果读者想要试着转换格式的话，我们建议访问[NeoCompiler-Eco](https://neocompiler.io/#!/ecolab/conversor)。
-
-![multisig 3/4](./multisig_3_4.png)
-
-![scripthash to address base58](./scripthash_address.png)
-
-## 一个简单的单节点共识
-
-让我们以前面描述的第一个节点（N1）为例，通过将`53`和`54`转换为`4f`，来创建一个包含1个所有者和1个签名者的多签名账户。
-
-`512102b3622bf4017bdfe317c58aed5f4c753f206b7db896046fa7d774bbc4bf7f8dc251ae`
-
-后者将产生以下地址：`AbU69m8WUZJSWanfr1Cy66cpEcsmMcX7BR`
+```csharp
+// Neo N3 地址转换
+public static string ToAddress(this UInt160 scriptHash)
+{
+    byte addressVersion = 0x35;  // Neo N3: 'N' 开头
+    Span<byte> data = stackalloc byte[21];
+    data[0] = addressVersion;
+    scriptHash.ToArray().CopyTo(data[1..]);
+    return Base58.Base58CheckEncode(data);
+}
+```
 
 [返回目录](README.md#目录)
