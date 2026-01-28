@@ -48,11 +48,56 @@ private_key = os.urandom(32)
 
 脚本哈希是20字节的二进制数据，地址是其可读形式。在智能合约中通常使用脚本哈希。
 
+### Q5: 如何将私钥转换为WIF格式？
+
+**A:**
+```python
+import hashlib
+import base58
+
+def private_key_to_wif(private_key: bytes) -> str:
+    # 添加版本前缀 0x80
+    extended = b'\x80' + private_key + b'\x01'
+    # 双重SHA256计算校验和
+    checksum = hashlib.sha256(hashlib.sha256(extended).digest()).digest()[:4]
+    # Base58编码
+    return base58.b58encode(extended + checksum).decode()
+
+# 示例
+private_key = bytes.fromhex('your_64_char_hex_private_key')
+wif = private_key_to_wif(private_key)
+```
+
+### Q6: 如何验证NEO地址是否有效？
+
+**A:**
+```python
+import base58
+import hashlib
+
+def is_valid_neo_address(address: str) -> bool:
+    try:
+        decoded = base58.b58decode(address)
+        if len(decoded) != 25:
+            return False
+        # 验证版本前缀
+        if decoded[0] != 0x17:
+            return False
+        # 验证校验和
+        checksum = hashlib.sha256(hashlib.sha256(decoded[:-4]).digest()).digest()[:4]
+        return checksum == decoded[-4:]
+    except:
+        return False
+
+# 示例
+print(is_valid_neo_address("AQVh2pG732YvtNaxEGkQUei3YA4cvo7d2i"))  # True
+```
+
 ---
 
 ## 交易相关
 
-### Q5: UTXO模型和账户模型有什么区别？
+### Q7: UTXO模型和账户模型有什么区别？
 
 **A:**
 
@@ -63,7 +108,7 @@ private_key = os.urandom(32)
 | 并行处理 | 更容易 | 需要锁定 |
 | 隐私性 | 较好 | 较差 |
 
-### Q6: 交易费用如何计算？
+### Q8: 交易费用如何计算？
 
 **A:** NEO交易费用分为两部分：
 - **系统费 (sys_fee)**: 执行智能合约消耗的GAS
@@ -73,7 +118,7 @@ private_key = os.urandom(32)
 总费用 = 系统费 + 网络费
 ```
 
-### Q7: 为什么我的交易一直未确认？
+### Q9: 为什么我的交易一直未确认？
 
 **A:** 可能原因：
 1. 网络费不足
@@ -83,18 +128,40 @@ private_key = os.urandom(32)
 
 解决方法：检查交易结构，确保签名正确，适当增加网络费。
 
+### Q10: 如何通过RPC查询账户余额？
+
+**A:**
+```python
+import requests
+import json
+
+def get_balance(address: str, rpc_url: str = "http://localhost:10332") -> dict:
+    payload = {
+        "jsonrpc": "2.0",
+        "method": "getnep17balances",
+        "params": [address],
+        "id": 1
+    }
+    response = requests.post(rpc_url, json=payload)
+    return response.json()
+
+# 示例
+balance = get_balance("NXV7ZhHiyM1aHXwpVsRZC6BwNFP2jghXAq")
+print(json.dumps(balance, indent=2))
+```
+
 ---
 
 ## 智能合约相关
 
-### Q8: NEP-5和NEP-17有什么区别？
+### Q11: NEP-5和NEP-17有什么区别？
 
 **A:** NEP-17是NEO 3.0的代币标准，相比NEP-5：
 - 使用`onNEP17Payment`回调
 - 支持更多功能
 - 更好的安全性
 
-### Q9: 智能合约部署失败怎么办？
+### Q12: 智能合约部署失败怎么办？
 
 **A:** 检查以下几点：
 1. 合约代码是否正确编译
@@ -102,7 +169,7 @@ private_key = os.urandom(32)
 3. 合约大小是否超过限制
 4. 参数类型是否正确
 
-### Q10: 如何调试智能合约？
+### Q13: 如何调试智能合约？
 
 **A:** 推荐方法：
 1. 使用NEO私有链进行测试
@@ -110,18 +177,70 @@ private_key = os.urandom(32)
 3. 使用NEO调试器逐步执行
 4. 编写单元测试
 
+### Q14: 智能合约中如何存储和读取数据？
+
+**A:**
+```csharp
+// C# 智能合约示例
+using Neo.SmartContract.Framework;
+using Neo.SmartContract.Framework.Services;
+
+public class StorageExample : SmartContract
+{
+    // 存储数据
+    public static void Put(string key, string value)
+    {
+        Storage.Put(Storage.CurrentContext, key, value);
+    }
+    
+    // 读取数据
+    public static string Get(string key)
+    {
+        return Storage.Get(Storage.CurrentContext, key);
+    }
+    
+    // 删除数据
+    public static void Delete(string key)
+    {
+        Storage.Delete(Storage.CurrentContext, key);
+    }
+}
+```
+
+### Q15: 如何在智能合约中触发事件通知？
+
+**A:**
+```csharp
+using Neo.SmartContract.Framework;
+
+public class EventExample : SmartContract
+{
+    // 定义事件
+    public static event Action<byte[], byte[], BigInteger> Transfer;
+    
+    public static bool DoTransfer(byte[] from, byte[] to, BigInteger amount)
+    {
+        // 业务逻辑...
+        
+        // 触发事件
+        Transfer(from, to, amount);
+        return true;
+    }
+}
+```
+
 ---
 
 ## 网络与节点
 
-### Q11: 主网、测试网、私有链如何选择？
+### Q16: 主网、测试网、私有链如何选择？
 
 **A:**
 - **私有链**: 开发和测试阶段
 - **测试网**: 集成测试，模拟真实环境
 - **主网**: 正式部署
 
-### Q12: 如何搭建私有链？
+### Q17: 如何搭建私有链？
 
 **A:** 参考 [私有链搭建指南](9-smartContract/Development_privateChain.md)
 
@@ -131,13 +250,35 @@ private_key = os.urandom(32)
 3. 创建钱包
 4. 启动节点
 
-### Q13: RPC接口调用失败怎么办？
+### Q18: RPC接口调用失败怎么办？
 
 **A:** 检查：
 1. 节点是否正常运行
 2. RPC端口是否开放
 3. 请求格式是否正确
 4. 网络连接是否正常
+
+### Q19: 如何通过RPC获取区块信息？
+
+**A:**
+```python
+import requests
+
+def get_block(index_or_hash, rpc_url="http://localhost:10332"):
+    payload = {
+        "jsonrpc": "2.0",
+        "method": "getblock",
+        "params": [index_or_hash, 1],  # 1表示返回详细信息
+        "id": 1
+    }
+    response = requests.post(rpc_url, json=payload)
+    return response.json()
+
+# 按高度查询
+block = get_block(1000)
+# 按哈希查询
+block = get_block("0x...")
+```
 
 ---
 
