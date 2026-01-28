@@ -1,6 +1,6 @@
 # Introduction
 
-This tutorial acts as a beginer's guide for NEO C# develpers. Advanced learners may refer to [NEO Documentation](http://docs.neo.org/zh-cn/index.html) for more details.
+This tutorial acts as a beginer's guide for NEO C# develpers. Advanced learners may refer to [NEO Documentation](http://docs.neo.org/docs/zh-cn/index.html) for more details.
 
 ## What you will learn
 
@@ -11,7 +11,7 @@ In the sections that follow, we will work you through an example of how to relea
 
 ## Before you begin
 
-This tutorial is based on the usage of the two full-node NEO clients: NEO-GUI and NEO-CLI. NEO-CLI will be used to set up a private chain accessible by nodes and NEO-GUI will be used to release smart contracts. Detailed information about the clients can be found in [NEO Node Introduction](https://docs.neo.org/zh-cn/node/introduction.html).
+This tutorial is based on the usage of the two full-node NEO clients: NEO-GUI and NEO-CLI. NEO-CLI will be used to set up a private chain accessible by nodes and NEO-GUI will be used to release smart contracts. Detailed information about the clients can be found in [NEO Node Introduction](https://docs.neo.org/docs/zh-cn/node/introduction.html).
 
 ### System environment
 
@@ -30,7 +30,7 @@ NEO-CLI runs in the following environments:
 >
 > Windows 10 is a recommended choice since NEO-GUI and NEO-CLI will be running at the same time.
 >
-> This tutorial only describes the occurences on Windows 10. Readers using other systems may refer to relevant chapters in [NEO Documentation](http://docs.neo.org/zh-cn/index.html) since environment and dependencies may differ in different systems.
+> This tutorial only describes the occurences on Windows 10. Readers using other systems may refer to relevant chapters in [NEO Documentation](http://docs.neo.org/docs/zh-cn/index.html) since environment and dependencies may differ in different systems.
 
 ### Download clients
 
@@ -71,7 +71,7 @@ We will complete the following tasks in this section:
 
 ## Setting up a private chain
 
-NEO Official provides a test net for development, debugging and testing purposes. Besides, users may also choose to set up their own private chain where they can operate more flexibly with plenty of test tokens. This article only describes a quick method to set up private chain. For the standard method refer to [Build a Private Chain](http://docs.neo.org/zh-cn/network/private-chain/private-chain.html).
+NEO Official provides a test net for development, debugging and testing purposes. Besides, users may also choose to set up their own private chain where they can operate more flexibly with plenty of test tokens. This article only describes a quick method to set up private chain. For the standard method refer to [Build a Private Chain](http://docs.neo.org/docs/zh-cn/network/private-chain/private-chain.html).
 
 ### Install nodes
 
@@ -673,7 +673,7 @@ We may use NEO-GUI to deploy the newly generated contract file.
 
    For NEP-5 asset contract, the argument is written as 0710 and the return value is 05.
 
-   Detailed rules can be referred to  [Smart Contract Parameters and Return Values](http://docs.neo.org/zh-cn/sc/Parameter.html)。
+   Detailed rules can be referred to  [Smart Contract Parameters and Return Values](http://docs.neo.org/docs/zh-cn/sc/Parameter.html)。
 
    Check the box of `required to create a storage area` as according to NEP-5 standard, storage areas are used to maintain accounts. 
 
@@ -683,7 +683,7 @@ We may use NEO-GUI to deploy the newly generated contract file.
 
 5. Click `trial run` in the popped up contract invocation interface. Double check and click `invoke`.
 
-   Contract deployment costs about 100-1000 GAS, which is further explained in [system fees](http://docs.neo.org/zh-cn/sc/systemfees.html).
+   Contract deployment costs about 100-1000 GAS, which is further explained in [system fees](http://docs.neo.org/docs/zh-cn/sc/systemfees.html).
 
 Upon successful deployment, your smart contract is now released to the blockchain.
 

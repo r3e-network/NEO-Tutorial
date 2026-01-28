@@ -55,7 +55,7 @@ lang-ref: Development_compile
 
 	对于这个合约，参数是0710，返回值是05。
 
-	详细规则可以参考[智能合约参数和返回值](http://docs.neo.org/zh-cn/sc/Parameter.html)。
+	详细规则可以参考[智能合约参数和返回值](http://docs.neo.org/docs/zh-cn/sc/Parameter.html)。
 
 	选中 `需要创建存储区域` 复选框
 

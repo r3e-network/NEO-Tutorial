@@ -117,7 +117,7 @@ public static void MintTokens()
 
 目前比较方便的查询交易结果的方式是要安装 ApplicationLogs 插件，其作为是在 RPC 模式下自动同步智能合约日志（ApplicationLogs），目前日志已经改为以 LevelDB 格式存储。
 
-安装方法参考：[NEO 客户端插件](https://docs.neo.org/zh-cn/node/plugin.html)
+安装方法参考：[NEO 客户端插件](https://docs.neo.org/docs/zh-cn/node/plugin.html)
 
 需要说明的是，一定要先安装插件，再发送交易。
 
@@ -131,13 +131,13 @@ tx.ToArray().ToHexString();
 
 关于如何发送交易，请参考：
 
-[neo-cli API 测试工具](https://docs.neo.org/zh-cn/node/cli/latest-version/api.html#%E6%B5%8B%E8%AF%95%E5%B7%A5%E5%85%B7)
+[neo-cli API 测试工具](https://docs.neo.org/docs/zh-cn/node/cli/latest-version/api.html#%E6%B5%8B%E8%AF%95%E5%B7%A5%E5%85%B7)
 
-[sendrawtransaction API](https://docs.neo.org/zh-cn/node/cli/latest-version/api/sendrawtransaction.html)
+[sendrawtransaction API](https://docs.neo.org/docs/zh-cn/node/cli/latest-version/api/sendrawtransaction.html)
 
 查询交易执行结果，请参考：
 
-[getapplicationlog 方法](https://docs.neo.org/zh-cn/node/plugin.html#getapplicationlog-%E6%96%B9%E6%B3%95)
+[getapplicationlog 方法](https://docs.neo.org/docs/zh-cn/node/plugin.html#getapplicationlog-%E6%96%B9%E6%B3%95)
 
 执行结果包括：交易 ID，触发器，调用的合约 ScriptHash，虚拟机执行状态，GAS 花费，返回值以及通知。
 

@@ -1,6 +1,6 @@
 # NEO Python 小白入门
 
-本教程适合初步接触 NEO 的 Python 开发者快速入门使用，如想进行更全面的学习可移步我们的 [技术文档](http://docs.neo.org/zh-cn/index.html)。为避免遇到不必要的麻烦，建议按照教程的顺序一步步进行。
+本教程适合初步接触 NEO 的 Python 开发者快速入门使用，如想进行更全面的学习可移步我们的 [技术文档](http://docs.neo.org/docs/zh-cn/index.html)。为避免遇到不必要的麻烦，建议按照教程的顺序一步步进行。
 
 * * *
 

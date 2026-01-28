@@ -1,6 +1,6 @@
 # 简介
 
-本教程是面向刚接触 NEO 的 C# 开发者的快速入门，如需进行更全面的学习可参考 [官方技术文档](http://docs.neo.org/zh-cn/index.html)。
+本教程是面向刚接触 NEO 的 C# 开发者的快速入门，如需进行更全面的学习可参考 [官方技术文档](http://docs.neo.org/docs/zh-cn/index.html)。
 
 ## 你将会学到什么
 
@@ -11,7 +11,7 @@
 
 ## 你需要准备什么
 
-NEO 有两个全节点客户端：NEO-GUI 和 NEO-CLI。本教程将使用 NEO-CLI 搭建私链供节点连接，使用 NEO-GUI 发布智能合约，关于客户端的详细信息，可参考 [NEO 节点介绍](https://docs.neo.org/zh-cn/node/introduction.html)。
+NEO 有两个全节点客户端：NEO-GUI 和 NEO-CLI。本教程将使用 NEO-CLI 搭建私链供节点连接，使用 NEO-GUI 发布智能合约，关于客户端的详细信息，可参考 [NEO 节点介绍](https://docs.neo.org/docs/zh-cn/node/introduction.html)。
 
 ### 系统环境
 
@@ -30,7 +30,7 @@ NEO-CLI 支持以下环境：
 >
 > 由于同时涉及到 NEO-GUI 和 NEO-CLI ，建议直接使用 Windows 10 的系统。
 >
-> 本教程中的描述均发生于 Windows 10 系统上，由于部分环境和依赖项的配置在不同系统上都有差异，如读者使用其他系统，请参考 [技术文档](http://docs.neo.org/zh-cn/index.html) 中对应章节。
+> 本教程中的描述均发生于 Windows 10 系统上，由于部分环境和依赖项的配置在不同系统上都有差异，如读者使用其他系统，请参考 [技术文档](http://docs.neo.org/docs/zh-cn/index.html) 中对应章节。
 
 ### 下载客户端
 
@@ -73,7 +73,7 @@ NEO-CLI 支持以下环境：
 
 ## 搭建私链
 
-NEO 官方提供了供用户开发、调试和测试的测试网（Test Net），但在本地搭建你自己的私链将获得更多的灵活性以及取之不尽的测试币。这里介绍一种搭建私链的简易方法，想要学习标准方法可参考[搭建私有链](http://docs.neo.org/zh-cn/network/private-chain/private-chain.html)。
+NEO 官方提供了供用户开发、调试和测试的测试网（Test Net），但在本地搭建你自己的私链将获得更多的灵活性以及取之不尽的测试币。这里介绍一种搭建私链的简易方法，想要学习标准方法可参考[搭建私有链](http://docs.neo.org/docs/zh-cn/network/private-chain/private-chain.html)。
 
 ### 安装节点
 
@@ -674,7 +674,7 @@ namespace NEP5
 
    对于NEP-5资产合约，参数列表填 0710，返回值填 05。
 
-   具体填写规则可参考 [智能合约参数和返回值](http://docs.neo.org/zh-cn/sc/Parameter.html)。
+   具体填写规则可参考 [智能合约参数和返回值](http://docs.neo.org/docs/zh-cn/sc/Parameter.html)。
 
    勾选 `需要创建存储区`，NEP5 标准使用存储区来维护帐户，因此需要勾选此项。
 
@@ -684,7 +684,7 @@ namespace NEP5
 
 5. 在弹出的调用合约窗口中点击 `试运行`，确认无误，点击 `调用`。
 
-   部署合约需要花费100 ~1000 GAS，详情请参见 [系统手续费](http://docs.neo.org/zh-cn/sc/systemfees.html)。
+   部署合约需要花费100 ~1000 GAS，详情请参见 [系统手续费](http://docs.neo.org/docs/zh-cn/sc/systemfees.html)。
 
 部署成功后，你的智能合约已经发布到区块链上了。
 

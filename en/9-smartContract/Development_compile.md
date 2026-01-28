@@ -71,7 +71,7 @@ When the compilation is done, NEO smart contract file named`NEP5.avm` is generat
 
    For this contract, the argument is written as 0710 and the return value is 05.
 
-   Detailed rules can be referred to  [Smart Contract Parameters and Return Values](http://docs.neo.org/zh-cn/sc/Parameter.html)。
+   Detailed rules can be referred to  [Smart Contract Parameters and Return Values](http://docs.neo.org/docs/zh-cn/sc/Parameter.html)。
 
    Check the box of `required to create a storage area`/
 
