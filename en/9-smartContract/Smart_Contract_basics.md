@@ -11,7 +11,7 @@ lang-ref: Smart_Contract_basics
 >
 > **Main points**:
 >
-> 1. The Strucutre of Smart contract
+> 1. The Structure of Smart contract
 >
 > 2. The Storage usage in Smart contract
 >
@@ -60,7 +60,7 @@ The `NEO` namespace is the API provided by the Neo blockchain, providing a way t
 Inside the contract class, the property defined with `static readonly` or `const` is the contract property which can be used as constants and can not be changed. For instance, when we want to define a Owner of that contract or the factor number which will be used in the later asset transfer, we can define these constants in this way:
 
 ```c#
-// Represents onwner of this contract, which is a fixed address. Usually should be the contract creator
+// Represents owner of this contract, which is a fixed address. Usually should be the contract creator
 public static readonly byte[] Owner = "ATrzHaicmhRj15C3Vv6e6gLfLqhSD2PtTr".ToScriptHash();
 
 // A constant number

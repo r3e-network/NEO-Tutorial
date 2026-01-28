@@ -11,7 +11,7 @@ lang-ref: sc-index
 - Learn smart contract by demos in C#
 	- [Smart Contract basic](Smart_Contract_basics.md)
 		- [Smart contract structure](Smart_Contract_basics.md#contract-structure)
-		- [Properties](Smart_Contract_basics.md#constract-property)
+		- [Properties](Smart_Contract_basics.md#contract-property)
 		- [Storage usage](Smart_Contract_basics.md#storage-property)
 		- [Data types](Smart_Contract_basics.md#data-type)
     - [Your first NEO smart contract](Smart_Contract_basics.md#Your first NEO contract)
