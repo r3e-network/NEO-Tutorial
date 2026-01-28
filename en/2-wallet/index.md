@@ -18,8 +18,8 @@ lang-ref: wallet-index
 There are several options available to you when creating a new wallet.
 
 For full blockchain synchronization, consider:
-* NEO-GUI -> https://docs.neo.org/en-us/node/gui/install.html
-* NEO-CLI -> https://docs.neo.org/en-us/node/cli/cli.html
+* NEO-GUI -> https://docs.neo.org/docs/n3/node/gui/install.html
+* NEO-CLI -> https://docs.neo.org/docs/n3/node/cli/cli.html
 
 For light clients which do not require synchronization, consider:
 * O3 Wallet -> https://o3.network/

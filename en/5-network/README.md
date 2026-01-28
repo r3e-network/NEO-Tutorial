@@ -10,5 +10,5 @@
 * [https://github.com/neo-ngd/NEO-Tutorial](https://github.com/neo-ngd/NEO-Tutorial)
 * [https://en.wikipedia.org/wiki/NEO_(cryptocurrency)](https://en.wikipedia.org/wiki/NEO_(cryptocurrency))
 * [https://github.com/neo-project](https://github.com/neo-project)
-* [https://docs.neo.org/en-us/network/network-protocol.html](https://docs.neo.org/en-us/network/network-protocol.html)
+* [https://docs.neo.org/docs/n3/foundation/network-protocol.html](https://docs.neo.org/docs/n3/foundation/network-protocol.html)
 * [https://github.com/O3Labs/neo-transaction-watcher/blob/master/neotx/network.go](https://github.com/O3Labs/neo-transaction-watcher/blob/master/neotx/network.go)

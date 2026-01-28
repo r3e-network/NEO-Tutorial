@@ -35,7 +35,7 @@ private const int ico_start_time = 1502726400;
 private const int ico_end_time = 1503936000;
 ```
 
-Inside the contract , we add a `CurrentSwapRate` rate function. The function judge if the current block time is inside the predefined ITO period. In side the function, it get the block time from the `Blockchain.GetHeader` and the `BlockChain.GetHeight` API. Those API can query the information of the block and header directly. More API can be found [here](https://docs.neo.org/en-us/sc/reference/api/neo.html).
+Inside the contract , we add a `CurrentSwapRate` rate function. The function judge if the current block time is inside the predefined ITO period. In side the function, it get the block time from the `Blockchain.GetHeader` and the `BlockChain.GetHeight` API. Those API can query the information of the block and header directly. More API can be found [here](https://docs.neo.org/docs/n3/reference/scapi/framework/native/Neo.html).
 
 ```csharp
 // The function CurrentSwapRate() returns the current exchange rate
