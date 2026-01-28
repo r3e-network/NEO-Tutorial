@@ -1,60 +1,93 @@
-## Overview of transaction fees
-Some transactions on the NEO network require fees. The network uses a fee structure with two types of fees; system fees and network fees. All fees are paid in the native utility token GAS (NeoGas).
+## Overview of Transaction Fees in Neo N3
 
-| Type        | Description                                                         |
-|-------------|---------------------------------------------------------------------|
-| Network Fee | Fee to pay the validator for including the transaction in the block |
-| System Fee  | Fixed fee to pay the network for operations                         |
+All transactions on the Neo N3 network require fees. The network uses a fee structure with two types of fees: **System Fee** and **Network Fee**. All fees are paid in GAS.
 
-### Network fee
-Network fees are currently optional for transactions below 1024 bytes in size. Adding a network fee (minimum of 0.001 GAS) will grant the transaction higher priority. The NEO network currently allows only 20 low priority transactions per block, so paying a higher network fee during high traffic times can result in a faster transaction.
+| Type        | Description                                                    |
+|-------------|----------------------------------------------------------------|
+| System Fee  | Cost of executing the transaction script in NeoVM (burned)     |
+| Network Fee | Fee for transaction processing and priority (paid to validators)|
 
-Transactions larger than 1024 bytes require 0.001 GAS as a base fee, in addition to 0.00001 GAS per byte over 1024. Most basic NEP-5 transfers remain well under the 1024 byte threshold, however transactions with more complex logic or large quantities of [inputs](2-Structure_of_NEO_transactions.md#inputs) and [outputs](2-Structure_of_NEO_transactions.md#outputs) may exceed the threshold and require a network fee.
+**Key difference from Neo Legacy:** In Neo N3, there are no free transactions. Every transaction requires both system and network fees.
 
-Priority for transactions in the mempool is determined by the fee paid per byte. The network fee can be collected and distributed by the validator to any contract address.
+### System Fee
 
-### System fee
-The system fee is a fixed fee calculated by [transaction type](3-NEO_transaction_types.md) and instructions to be executed by the NEO virtual machine. Generally speaking, transaction costs scale with the network resources required. There is a system fee discount of `10` GAS for each transaction, so most user interaction with the network and smart contracts will be free. Unlike network fees, system fees are distributed to NEO holders.
+The system fee covers the cost of executing the transaction script in the NeoVM. It is calculated based on:
+- Opcodes executed
+- Syscalls invoked
+- CPU and storage resources used
 
-#### System calls
+**System fees are burned** - they are removed from circulation, reducing the total GAS supply.
 
-| System calls                | Fee (GAS)                                                                       |
-|-----------------------------|---------------------------------------------------------------------------------|
-| *Default*                   | `0.001` for all system calls                                                    |
-| `Runtime.CheckWitness`      | `0.2`                                                                           |
-| `Blockchain.GetHeader`      | `0.1`                                                                           |
-| `Blockchain.GetBlock`       | `0.2`                                                                           |
-| `Blockchain.GetTransaction` | `0.1`                                                                           |
-| `Blockchain.GetAccount`     | `0.1`                                                                           |
-| `Blockchain.GetValidators`  | `0.2`                                                                           |
-| `Blockchain.GetAsset`       | `0.1`                                                                           |
-| `Blockchain.GetContract`    | `0.1`                                                                           |
-| `Transaction.GetReferences` | `0.2`                                                                           |
-| `Account.SetVotes`          | `1`                                                                             |
-| `Validator.Register`        | `1000`                                                                          |
-| `Contract.Create`           | `100` per contract, `400` for enabled storage, `500` for enabled dynamic invoke |
-| `Contract.Migrate`          | `100` per contract, `400` for enabled storage, `500` for enabled dynamic invoke |
-| `Storage.Get`               | `0.1`                                                                           |
-| `Storage.Put`               | `1` per kiB                                                                     |
-| `Storage.Delete`            | `0.1`                                                                           |
+The system fee is calculated before transaction execution. If the actual execution cost exceeds the declared system fee, the transaction fails.
 
-#### Instructions
+#### Common Operation Costs
 
-| Instruction               | Fee (GAS)                                           |
-|---------------------------|-----------------------------------------------------|
-| *Default*                 | `0.001` for all instructions in the virtual machine |
-| `OpCode.PUSH16` (or less) | `0`                                                 |
-| `OpCode.NOP`              | `0`                                                 |
-| `OpCode.APPCALL`          | `0.01`                                              |
-| `OpCode.TAILCALL`         | `0.01`                                              |
-| `OpCode.SHA1`             | `0.01`                                              |
-| `OpCode.SHA256`           | `0.01`                                              |
-| `OpCode.HASH160`          | `0.02`                                              |
-| `OpCode.HASH256`          | `0.02`                                              |
-| `OpCode.CHECKSIG`         | `0.1`                                               |
-| `OpCode.CHECKMULTISIG`    | `0.1` per signature                                 |
+| Operation | Approximate Cost |
+|-----------|------------------|
+| Simple NEP-17 transfer | ~0.0001 GAS |
+| Contract deployment | ~10 GAS |
+| Storage write (per byte) | ~0.001 GAS |
+| Signature verification | ~0.001 GAS |
 
-## Utility fee in applications
-Any deployed application in the network is able to require an application fee in order to use the smart contract. This fee is often charged using a NEP-5 compatible utility token, but smart contracts are able to charge GAS as well.
+### Network Fee
+
+The network fee covers:
+1. **Transaction size** - cost per byte of the serialized transaction
+2. **Signature verification** - cost of verifying witness scripts
+3. **Priority** - higher fees result in faster inclusion in blocks
+
+Network fees are **paid to consensus nodes** as a reward for processing transactions.
+
+#### Network Fee Calculation
+
+```
+NetworkFee = SizeFee + VerificationFee
+
+SizeFee = TransactionSize × FeePerByte
+VerificationFee = Sum of verification costs for all witnesses
+```
+
+The `FeePerByte` is a network policy parameter (default: 0.00001 GAS).
+
+#### Transaction Priority
+
+Transactions in the memory pool are prioritized by `NetworkFee / Size` ratio. Higher ratios mean faster confirmation. During network congestion, increasing the network fee ensures your transaction is processed quickly.
+
+## Fee Estimation
+
+Most Neo N3 SDKs provide automatic fee calculation:
+
+### Using neon-js
+```javascript
+// Automatic fee calculation
+const result = await Neon.create.transaction({
+  script: script,
+  signers: [signer]
+})
+.withSystemFee()  // Auto-calculate system fee
+.withNetworkFee() // Auto-calculate network fee
+.sign(account)
+.execute(rpcClient);
+```
+
+### Using RPC
+```json
+// invokefunction with "test" mode to estimate fees
+{
+  "jsonrpc": "2.0",
+  "method": "invokefunction",
+  "params": ["contractHash", "method", [], [signer]],
+  "id": 1
+}
+```
+
+## GAS Distribution
+
+In Neo N3, GAS is automatically distributed to NEO holders. The distribution happens when:
+- NEO is transferred
+- A vote is cast or changed
+- GAS is explicitly claimed via transfer
+
+There is no need for manual GAS claiming like in Neo Legacy.
 
 [Return to contents](README.md#contents).

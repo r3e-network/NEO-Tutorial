@@ -1,17 +1,18 @@
 ## Contents
 
 1. [Introduction to transactions](1-Introduction_to_transactions.md)
-2. [Structure of NEO transactions](2-Structure_of_NEO_transactions.md)
-3. [NEO transaction types](3-NEO_transaction_types.md)
+2. [Structure of Neo N3 transactions](2-Structure_of_NEO_transactions.md)
+3. [Transaction operations](3-NEO_transaction_types.md)
 4. [Transaction fees](4-NEO_transaction_fees.md)
 
 ## Additional Resources
 
 ### Tools
-There are various tools and libraries available to create and broadcast transactions to the NEO network:
+There are various tools and libraries available to create and broadcast transactions to the Neo N3 network:
 
-- [neon-js](https://github.com/CityOfZion/neon-js) is a JavaScript library that can be used to build extensive transactions in any JavaScript application
-- [neo-python](https://github.com/CityOfZion/neo-python) is a full NEO node that can be used as an SDK to create transactions and interact with the NEO network
-- [neo-gui](https://github.com/neo-project/neo-gui/) is the official Windows GUI to interact with the NEO network
-- [neo-cli](https://github.com/neo-project/neo-cli/) is the official full node implementation that runs as a command line implementation and can be used to create and broadcast transactions to the NEO network
-- Many other wallet or node implementations like [neo-lux](https://github.com/CityOfZion/neo-lux) and [neo-thinsdk-cs](https://github.com/NewEconoLab/neo-thinsdk-cs) in C#
+- [neon-js](https://github.com/CityOfZion/neon-js) - JavaScript/TypeScript SDK for Neo N3
+- [neo-go](https://github.com/nspcc-dev/neo-go) - Go implementation of Neo N3 node and SDK
+- [neow3j](https://github.com/neow3j/neow3j) - Java/Kotlin SDK for Neo N3
+- [neo-mamba](https://github.com/CityOfZion/neo-mamba) - Python SDK for Neo N3
+- [neo-cli](https://github.com/neo-project/neo-node) - Official Neo N3 node implementation
+- [neo-gui](https://github.com/neo-project/neo-gui) - Official Neo N3 GUI wallet
