@@ -124,7 +124,9 @@ return true;
 
 
 ## Next Step
-Now you have successfully make your first ITO and famailiar with the most ideas of smart contract, the next one will be more difficult contract [which is CGAS.](cgas/1_what_is_cgas.md)
+Now you have successfully made your first ITO and are familiar with the main concepts of smart contracts. Next, you can explore:
+- [NFT Tokens (NEP-17)](NFT.md)
+- [Native Contracts in Neo N3](https://docs.neo.org/docs/en-us/)
 
 ## Previous Step
-If you want to know how to implement the NEP5, click [here](Implementation_of_NEP5.md).
+If you want to know how to implement the NEP-17 token, click [here](Implementation_of_NEP5.md).

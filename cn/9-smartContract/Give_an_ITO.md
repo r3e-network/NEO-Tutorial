@@ -121,4 +121,9 @@ return true;
 
 
 ## 下一步骤
-现在你已经成功地完成了你的第一个ITO，同时也熟悉了智能合约的大部分内容，下一部分内容涉及到更为复杂的合约，[即CGAS](https://github.com/neo-ngd/NEO-Tutorial/blob/master/9-smartContract/cgas/1_what_is_cgas.md)。
+现在你已经成功地完成了你的第一个ITO，同时也熟悉了智能合约的大部分内容。接下来可以探索：
+- [NFT Tokens (NEP-17)](NFT.md)
+- [Neo N3原生合约](https://docs.neo.org/docs/zh-cn/)
+
+## 上一步
+如果你想了解如何实现NEP-17代币，请点击[这里](Implementation_of_NEP5.md)。

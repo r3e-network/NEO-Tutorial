@@ -1,38 +1,40 @@
 
+---
+layout: post
+lang: en
+lang-ref: NFT
+---
 
-## What is a non-fungible token?
+## What is a Non-Fungible Token (NFT)?
 
-A non-fungible token (NFT) can be thought of like a property deed - each one is unique and carries some non-mutable information (e.g. the physical address of the property) although other information, such as the owner of the property can be changed. An NFT smart contract is useful to track ownership of real-world items, as well as in online gaming, allowing users to posess unique characters or items of a limited supply, that can be transferred between users without requiring the permission of the game owner.
+A non-fungible token (NFT) can be thought of like a property deed - each one is unique and carries some non-mutable information (e.g., the physical address of the property) although other information, such as the owner of the property can be changed. An NFT smart contract is useful to track ownership of real-world items, as well as in online gaming, allowing users to possess unique characters or items of a limited supply, that can be transferred between users without requiring the permission of the game owner.
 
-The NFT proposal standard for the Neo Smart Economy is currently in development. This is example in C# showing how such a smart contract might be written. There is some overlap between NEP-5 (fungible) token functionality to make adoption easier by API writers.
+The NFT standard for Neo N3 is **NEP-11**. This document provides an example in C# showing how such a smart contract might be written.
 
+> Note: NEP-11 is still a draft proposal. For production use, refer to the latest [NEP-11 specification](https://github.com/neo-project/proposals/blob/master/nep-11.md).
 
-### Methods
+### NEP-11 Methods (Draft)
 
 #### name
 
 ```csharp
-public static string name()
+public static string Name() => "MyNFT";
 ```
 
-Returns the name of the token. e.g. <code>"MyNFT"</code>. 
-
-This method MUST always return the same value every time it is invoked. 
+Returns the name of the token. This method MUST always return the same value every time it is invoked.
 
 #### symbol
 
 ```csharp
-public static string symbol()
+public static string Symbol() => "MNFT";
 ```
 
-Returns a short string symbol of the token managed in this contract. e.g. <code>"MNFT"</code>. This symbol SHOULD be short (3-8 characters is recommended), with no whitespace characters or new-lines and SHOULD be limited to the uppercase latin alphabet (i.e. the 26 letters used in English). 
-
-This method MUST always return the same value every time it is invoked. 
+Returns a short string symbol of the token managed in this contract. This symbol SHOULD be short (3-8 characters is recommended).
 
 #### totalSupply
 
 ```csharp
-public static BigInteger totalSupply()
+public static BigInteger TotalSupply() => ...
 ```
 
 Returns the total token supply deployed in the system.
@@ -40,124 +42,118 @@ Returns the total token supply deployed in the system.
 #### decimals
 
 ```csharp
-public static byte decimals()
+public static byte Decimals() => 0;
 ```
 
-Returns the number of decimals used by the token - e.g. <code>8</code>, means to divide the token amount by <code>100,000,000</code> to get its user representation.
-
-If the token managed in this contract is indivisible, the function SHOULD return <code>0</code>.
-
-If the function returns a non-zero value, all of the ''OPTIONAL'' methods in this standard MUST be implemented.
-
-This method MUST always return the same value every time it is invoked. 
-
-#### tokens
-
-```csharp
-public static enumerator tokens()
-```
-
-Returns an <code>enumerator</code> that contains all the tokens that have been issued in this contract.
-
-#### transfer
-
-```csharp
-public static bool transfer(byte[] to, byte[] tokenid)
-```
-
-Transfers token with id <code>tokenid</code> to address <code>to</code>.
-
-The parameter <code>tokenid</code> SHOULD be a valid NFT. If not, this method SHOULD <code>throw</code> an exception.
-
-The parameter <code>to</code> SHOULD be a 20-byte address. If not, this method SHOULD <code>throw</code> an exception.
-
-The function SHOULD return <code>false</code> if the token that will be transferred has more than one owner.
-
-If the method succeeds, it MUST fire the <code>transfer</code> event, and MUST return <code>true</code>, even if the token is sent to the owner himself.
-
-The function SHOULD check whether the owner address equals the caller contract hash. If so, the transfer SHOULD be processed; If not, the function SHOULD use the SYSCALL <code>Neo.Runtime.CheckWitness</code> to verify the transfer.
-
-If the <code>to</code> address is a deployed contract, the function SHOULD check the <code>payable</code> flag of this contract to decide whether it should transfer the tokens to this contract.
-
-If the transfer is not processed, the function SHOULD return <code>false</code>.
-
-```csharp
-public static bool transfer(byte[] from, byte[] to, BigInteger amount, byte[] tokenid)
-```
-
-''OPTIONAL'': This method MUST be implemented if <code>decimals() > 0</code>.
-
-Transfers an <code>amount</code> of tokens with id <code>tokenid</code> from address <code>from</code> to address <code>to</code>.
-
-The parameter <code>tokenid</code> SHOULD be a valid NFT. If not, this method SHOULD <code>throw</code> an exception.
-
-The parameters <code>from</code> and <code>to</code> SHOULD be 20-byte addresses. If not, this method SHOULD <code>throw</code> an exception.
-
-The parameter <code>amount</code> SHOULD be greater than or equal to <code>0</code> and SHOULD be less than or equal to <code>pow(10, decimals())</code>. If not, this method SHOULD <code>throw</code> an exception.
-
-The function SHOULD return <code>false</code> if the <code>from</code> account balance does not have enough tokens to spend.
-
-If the method succeeds, it MUST fire the <code>transfer</code> event, and MUST return <code>true</code>, even if the <code>amount</code> is <code>0</code>, or the token is sent to the owner himself.
-
-The function SHOULD check whether the <code>from</code> address equals the caller contract hash. If so, the transfer SHOULD be processed; If not, the function SHOULD use the SYSCALL <code>Neo.Runtime.CheckWitness</code> to verify the transfer.
-
-If the <code>to</code> address is a deployed contract, the function SHOULD check the <code>payable</code> flag of this contract to decide whether it should transfer the tokens to this contract.
-
-If the transfer is not processed, the function SHOULD return <code>false</code>.
-
-#### ownerOf
-
-```csharp
-public static enumerator ownerOf(byte[] tokenid)
-```
-
-Returns an <code>enumerator</code> that contains all the co-owners that own the specified token.
-
-The parameter <code>tokenid</code> SHOULD be a valid NFT. If not, this method SHOULD <code>throw</code> an exception.
-
-#### tokenURI
-
-```csharp
-public static string tokenURI(byte[] tokenid)
-```
-
-Returns a distinct Uniform Resource Identifier (URI) for a given asset. The URI data of a token supplies a reference to get more information about a specific token or its data.
-
-The parameter <code>tokenid</code> SHOULD be a valid NFT. If not, this method SHOULD <code>throw</code> an exception.
+Returns the number of decimals used by the token. For NFTs (indivisible), this should return `0`.
 
 #### balanceOf
 
 ```csharp
-public static BigInteger balanceOf(byte[] owner, byte[] tokenid)
+public static BigInteger BalanceOf(UInt160 owner)
 ```
 
-Returns the balance of the specified token for the specified owner's account.
+Returns the balance of the specified tokens for the specified owner's account.
 
-The parameter <code>tokenid</code> SHOULD be a valid NFT. If not, this method SHOULD <code>throw</code> an exception.
+The parameter `owner` MUST be a valid `UInt160` address.
 
-The parameter <code>owner</code> SHOULD be a 20-byte address. If not, this method SHOULD <code>throw</code> an exception.
-
-If the <code>owner</code> is an unused address, or it's not the owner of the specified token, this method SHOULD return <code>0</code>.
-
-#### tokensOfOwner
+#### ownerOf
 
 ```csharp
-public static enumerator tokensOfOwner(byte[] owner)
+public static UInt160 OwnerOf(byte[] tokenId)
 ```
 
-Returns an <code>enumerator</code> that contains all the tokens owned by the specified address.
+Returns the owner of the specified token.
 
-The parameter <code>owner</code> SHOULD be a 20-byte address. If not, this method SHOULD <code>throw</code> an exception.
-
-### Events
-
+The parameter `tokenId` SHOULD be a valid NFT token ID.
 
 #### transfer
 
 ```csharp
-public static event transfer(byte[] from, byte[] to, BigInteger amount, byte[] tokenid)
+public static bool Transfer(UInt160 from, UInt160 to, byte[] tokenId, object data)
+```
+
+Transfers token with id `tokenId` from address `from` to address `to`.
+
+The method MUST:
+1. Check if `from` is the owner of the token
+2. Verify the caller using `Runtime.CheckWitness(from)`
+3. Update the token ownership
+4. Fire the `Transfer` event
+
+#### tokensOfOwner
+
+```csharp
+public static Iterator TokensOfOwner(UInt160 owner)
+```
+
+Returns an iterator containing all the tokens owned by the specified address.
+
+### Events
+
+#### Transfer
+
+```csharp
+[DisplayName("Transfer")]
+public static event Action<UInt160, UInt160, byte[]> OnTransfer;
 ```
 
 MUST trigger when tokens are transferred, including zero value transfers.
 
-A token contract which creates new tokens SHOULD trigger a <code>transfer</code> event with the <code>from</code> address set to <code>null</code> when tokens are created.
+- When minting tokens: `from` is `null`
+- When burning tokens: `to` is `null`
+
+### Example Contract Structure
+
+```csharp
+using Neo.SmartContract.Framework;
+using Neo.SmartContract.Framework.Services;
+using System;
+using System.Runtime.InteropServices;
+
+public class MyNFT : SmartContract
+{
+    [DisplayName("Transfer")]
+    public static event Action<UInt160, UInt160, byte[]> OnTransfer;
+
+    private static StorageMap TokenOwner => 
+        Storage.CurrentContext.CreateMap(nameof(TokenOwner));
+
+    public static bool Transfer(UInt160 from, UInt160 to, byte[] tokenId, object data)
+    {
+        if (!from.IsValid || !to.IsValid)
+            throw new Exception("Invalid address");
+        if (tokenId == null || tokenId.Length == 0)
+            throw new Exception("Invalid token ID");
+        
+        UInt160 owner = TokenOwner.Get(tokenId);
+        if (!owner.IsValid)
+            throw new Exception("Token does not exist");
+        if (owner != from && !Runtime.CheckWitness(from))
+            return false;
+
+        TokenOwner.Put(tokenId, to);
+        OnTransfer(from, to, tokenId);
+        return true;
+    }
+
+    public static UInt160 OwnerOf(byte[] tokenId)
+    {
+        return TokenOwner.Get(tokenId);
+    }
+
+    public static BigInteger BalanceOf(UInt160 owner)
+    {
+        // Implementation depends on storage structure
+    }
+}
+```
+
+## Next Steps
+
+- Explore [NEP-11 specification](https://github.com/neo-project/proposals/blob/master/nep-11.md) for the latest details
+- Check [Neo N3 Documentation](https://docs.neo.org/docs/en-us/) for native contract support
+
+## Previous Step
+
+Learn about [NEP-17 Tokens](What_is_nep5.md).

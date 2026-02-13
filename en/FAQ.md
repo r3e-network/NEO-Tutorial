@@ -103,10 +103,12 @@ print(is_valid_neo_address("AQVh2pG732YvtNaxEGkQUei3YA4cvo7d2i"))  # True
 
 | Feature | UTXO Model | Account Model |
 |---------|------------|---------------|
-| Assets Used | NEO, GAS | NEP-5 Tokens |
+| Assets Used | NEO, GAS (Neo Legacy) | NEP-17 Tokens, NEO, GAS (Neo N3) |
 | Balance Calculation | Sum of unspent outputs | Direct balance read |
 | Parallel Processing | Easier | Requires locking |
 | Privacy | Better | Worse |
+
+**Note:** Neo N3 uses an account-based model (similar to Ethereum), not UTXO.
 
 ### Q8: How are transaction fees calculated?
 
@@ -135,7 +137,7 @@ Solution: Check transaction structure, ensure correct signature, and increase ne
 import requests
 import json
 
-def get_balance(address: str, rpc_url: str = "http://localhost:10332") -> dict:
+def get_balance(address: str, rpc_url: str = "https://testnet1.neo.coz.io:443") -> dict:
     payload = {
         "jsonrpc": "2.0",
         "method": "getnep17balances",
@@ -150,16 +152,22 @@ balance = get_balance("NXV7ZhHiyM1aHXwpVsRZC6BwNFP2jghXAq")
 print(json.dumps(balance, indent=2))
 ```
 
+**Neo N3 RPC Ports:**
+- TestNet: 20332 (REST: 80), e.g., `https://testnet1.neo.coz.io:443`
+- MainNet: 10332 (REST: 80), e.g., `https://mainnet1.neo.coz.io:443`
+
 ---
 
 ## Smart Contracts
 
 ### Q11: What's the difference between NEP-5 and NEP-17?
 
-**A:** NEP-17 is the token standard for NEO 3.0. Compared to NEP-5:
-- Uses `onNEP17Payment` callback
-- Supports more features
-- Better security
+**A:** NEP-17 is the token standard for Neo N3, replacing NEP-5 from Neo Legacy. Key differences:
+- Uses `UInt160` type instead of `byte[]` for addresses
+- Uses `onNEP17Payment` callback instead of checking `payable` flag
+- Added `data` parameter to `transfer` method for contract interaction
+- Uses `PascalCase` method naming instead of `camelCase`
+- Uses `Action<T1, T2, T3>` for events with `DisplayName` attribute
 
 ### Q12: What to do if smart contract deployment fails?
 
@@ -181,26 +189,26 @@ print(json.dumps(balance, indent=2))
 
 **A:**
 ```csharp
-// C# Smart Contract Example
+// C# Smart Contract Example (Neo N3)
 using Neo.SmartContract.Framework;
 using Neo.SmartContract.Framework.Services;
 
 public class StorageExample : SmartContract
 {
     // Store data
-    public static void Put(string key, string value)
+    public static void PutData(string key, string value)
     {
         Storage.Put(Storage.CurrentContext, key, value);
     }
     
     // Read data
-    public static string Get(string key)
+    public static string GetData(string key)
     {
-        return Storage.Get(Storage.CurrentContext, key);
+        return Storage.Get(Storage.CurrentContext, key).TryParse();
     }
     
     // Delete data
-    public static void Delete(string key)
+    public static void DeleteData(string key)
     {
         Storage.Delete(Storage.CurrentContext, key);
     }
@@ -211,19 +219,21 @@ public class StorageExample : SmartContract
 
 **A:**
 ```csharp
+// Neo N3 Smart Contract Example
 using Neo.SmartContract.Framework;
 
 public class EventExample : SmartContract
 {
-    // Define event
-    public static event Action<byte[], byte[], BigInteger> Transfer;
+    // Define event with Action<T1, T2, T3>
+    [DisplayName("Transfer")]
+    public static event Action<UInt160, UInt160, BigInteger> OnTransfer;
     
-    public static bool DoTransfer(byte[] from, byte[] to, BigInteger amount)
+    public static bool DoTransfer(UInt160 from, UInt160 to, BigInteger amount)
     {
         // Business logic...
         
         // Trigger event
-        Transfer(from, to, amount);
+        OnTransfer(from, to, amount);
         return true;
     }
 }
@@ -264,7 +274,7 @@ Basic steps:
 ```python
 import requests
 
-def get_block(index_or_hash, rpc_url="http://localhost:10332"):
+def get_block(index_or_hash, rpc_url="https://testnet1.neo.coz.io:443"):
     payload = {
         "jsonrpc": "2.0",
         "method": "getblock",

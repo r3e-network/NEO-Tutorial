@@ -26,7 +26,7 @@ namespace Helloworld
     public class Contract1 : SmartContract
     {
         private const string test_str = "Hello World";
-        public static String Main(string operation, object[] args)
+        public static string Main(string operation, object[] args)
         {
             Storage.Put("Hello", "World");
             return test_str;
@@ -34,6 +34,8 @@ namespace Helloworld
     }
 }
 ```
+
+**注意：** 在 Neo N3 中，`Main` 方法是可选的。你可以直接暴露公共方法而无需 Main 入口点。
 
 
 ##  合约结构
@@ -52,11 +54,14 @@ namespace Helloworld
 
 ```c#
 // 代表该合约的所属者，表示为固定的地址。通常是合约的创建者
-public static readonly byte[] Owner = "ATrzHaicmhRj15C3Vv6e6gLfLqhSD2PtTr".ToScriptHash();
+[InitialValue("ATrzHaicmhRj15C3Vv6e6gLfLqhSD2PtTr", ContractParameterType.Hash160)]
+static readonly UInt160 Owner = default;
 
 // 一个常量
 private const ulong factor = 100000000;
 ```
+
+**注意：** 在 Neo N3 中，使用 `UInt160` 类型代替 `byte[]` 来表示地址。
 
 在合约属性中定义的这些属性通常是一些常量，可以在智能合约方法的内部使用，当智能合约在任意实例上运行时，这些属性的值都保持不变。
 
@@ -84,9 +89,21 @@ Storage.Put(Storage.CurrentContext, "totalSupply", 100000000);
 对于基本类型的存储 `Storage` 类非常的有效，而对于结构化数据，你可以使用 `StorageMap` 来存储，这个类可以在智能合约存储中将整个容器存储在一个键中。
 
 ```csharp
-// 获取storageMap中的总供应量。这个键名称为“contract”的Map可以用来表示整个容器
+// 获取storageMap中的总供应量。这个键名称为"contract"的Map可以用来表示整个容器
 StorageMap contract = Storage.CurrentContext.CreateMap(nameof(contract));
 return contract.Get("totalSupply").AsBigInteger();
+```
+
+**Neo N3 存储 API:**
+```csharp
+// 存储值
+Storage.Put(Storage.CurrentContext, "key", "value");
+
+// 获取值
+Storage.Get(Storage.CurrentContext, "key");
+
+// 删除值
+Storage.Delete(Storage.CurrentContext, "key");
 ```
 ## 数据类型
 
@@ -306,11 +323,17 @@ private static bool Register(string domain, byte[] owner){
 
 ##  事件
 
-在智能合约中，事件是区块链与应用程序前端(或后端)进行通信的一种方式，后者可以“监听”某些事件，并在事件发生时做一些操作。你可以使用这个机制来更新外部数据库、做一些分析或更新UI。在某些特定的合约标准中，它定义了一些应该发布的事件。本节没有涉及到这方面的相关内容，但是它对于其他智能合约而言确实非常有用。例如，在NEP-5Token标准中，事件 `转账` 应该在用户调用转账方法时触发。
+在智能合约中，事件是区块链与应用程序前端(或后端)进行通信的一种方式，后者可以"监听"某些事件，并在事件发生时做一些操作。你可以使用这个机制来更新外部数据库、做一些分析或更新UI。在某些特定的合约标准中，它定义了一些应该发布的事件。本节没有涉及到这方面的相关内容，但是它对于其他智能合约而言确实非常有用。例如，在NEP-17代币标准中，事件 `Transfer` 应该在用户调用转账方法时触发。
 
 ```csharp
-//当对NEP-5资产进行转账时调用
-public static event transfer(byte[] from, byte[] to, BigInteger amount)
+// 当对NEP-17资产进行转账时触发
+public static event Action<UInt160, UInt160, BigInteger> OnTransfer;
+```
+
+**Neo N3 事件语法:**
+```csharp
+[DisplayName("Transfer")]
+public static event Action<UInt160, UInt160, BigInteger> OnTransfer;
 ```
 ## Assignment
 
@@ -318,4 +341,4 @@ public static event transfer(byte[] from, byte[] to, BigInteger amount)
 
 ## 下一步骤
 
-太棒了!你刚完成了第一个智能合约。现在让我们学习下[NEP 5 Token](What_is_nep5.md)的相关知识
+太棒了!你刚完成了第一个智能合约。现在让我们学习下[NEP-17代币](What_is_nep5.md)的相关知识

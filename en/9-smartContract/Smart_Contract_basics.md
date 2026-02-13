@@ -38,13 +38,16 @@ namespace Helloworld
     public class Contract1 : SmartContract
     {
         private const string test_str = "Hello World";
-        public static String Main(string operation, object[] args)
+        public static string Main(string operation, object[] args)
         {
             Storage.Put("Hello", "World");
             return test_str;
         }
     }
 }
+```
+
+**Note:** In Neo N3, the `Main` method is optional. You can expose public methods directly without a Main entry point.
 ```
 ##  Contract structure
 
@@ -61,11 +64,14 @@ Inside the contract class, the property defined with `static readonly` or `const
 
 ```c#
 // Represents owner of this contract, which is a fixed address. Usually should be the contract creator
-public static readonly byte[] Owner = "ATrzHaicmhRj15C3Vv6e6gLfLqhSD2PtTr".ToScriptHash();
+[InitialValue("ATrzHaicmhRj15C3Vv6e6gLfLqhSD2PtTr", ContractParameterType.Hash160)]
+static readonly UInt160 Owner = default;
 
 // A constant number
 private const ulong factor = 100000000;
 ```
+
+**Note:** In Neo N3, use `UInt160` type for addresses instead of `byte[]`.
 
 These properties defined in contract property are usually constants that can be used inside the methods of smart contract and every time the smart contract is running on any instance, these properties keep the same value.
 
@@ -93,12 +99,24 @@ Storage.Put(Storage.CurrentContext, "totalSupply", 100000000);
 
 Here `CurrentContext` Returns the current store context. After obtaining the store context, the object can be passed as an argument to other contracts (as a way of authorization), allowing other contracts to perform read/write operations on the persistent store of the current contract.
 
-`Storage` work well for storing primitive values and while you can use an `StorageMap`  which can be used for storing structured data, this will store the entire container in a single key in smart contract storage.
+`Storage` works well for storing primitive values and while you can use an `StorageMap` which can be used for storing structured data, this will store the entire container in a single key in smart contract storage.
 
 ```csharp
-//Get the totalSupply in the storageMap. The Map is used an entire container with key name "contract"
+// Get the totalSupply in the storageMap. The Map is used as an entire container with key name "contract"
 StorageMap contract = Storage.CurrentContext.CreateMap(nameof(contract));
 return contract.Get("totalSupply").AsBigInteger();
+```
+
+**Neo N3 Storage API:**
+```csharp
+// Put value
+Storage.Put(Storage.CurrentContext, "key", "value");
+
+// Get value
+Storage.Get(Storage.CurrentContext, "key");
+
+// Delete value
+Storage.Delete(Storage.CurrentContext, "key");
 ```
 ## Data type
 When using C# to develop smart contracts, you cannot use the full set of C# features due to the difference between NeoVM and Dotnet IL.
@@ -135,29 +153,33 @@ The basic types of C# are:
 
 ## Your first NEO contract
 
-After analysing the basic hello world contract, let us move to your first real-world smart contract. Here we provide a very simple DNS system which was written in C#. The main function of the DNS is store the domain for users. It contains all the points above except the events. We can investigate this smart contract to learn how to make a basic smart contract. The source code is here:
+After analyzing the basic hello world contract, let us move to your first real-world smart contract. Here we provide a very simple DNS system which was written in C#. The main function of the DNS is to store the domain for users. It contains all the points above except the events. We can investigate this smart contract to learn how to make a basic smart contract. The source code is here:
 
 ```csharp
 using Neo.SmartContract.Framework;
 using Neo.SmartContract.Framework.Services.Neo;
+
 namespace Neo.SmartContract
 {
     public class Domain : SmartContract
     {
         public static object Main(string operation, params object[] args)
         {
-	        if (Runtime.Trigger == TriggerType.Application){
-		            switch (operation){
-		                case "query":
-		                    return Query((string)args[0]);
-		                case "register":
-		                    return Register((string)args[0], (byte[])args[1]);
-		                case "delete":
-		                    return Delete((string)args[0]);
-		                default:
-		                    return false;
-		            }
-	        }
+            if (Runtime.Trigger == TriggerType.Application)
+            {
+                switch (operation)
+                {
+                    case "query":
+                        return Query((string)args[0]);
+                    case "register":
+                        return Register((string)args[0], (UInt160)args[1]);
+                    case "delete":
+                        return Delete((string)args[0]);
+                    default:
+                        return false;
+                }
+            }
+            return false;
         }
 
         private static byte[] Query(string domain)
@@ -165,10 +187,9 @@ namespace Neo.SmartContract
             return Storage.Get(Storage.CurrentContext, domain);
         }
 
-
-        private static bool Register(string domain, byte[] owner)
+        private static bool Register(string domain, UInt160 owner)
         {
-	        // Check if  the owner is the same as the one who invoke the contract
+            // Check if the owner is the same as the one who invokes the contract
             if (!Runtime.CheckWitness(owner)) return false;
             byte[] value = Storage.Get(Storage.CurrentContext, domain);
             if (value != null) return false;
@@ -178,7 +199,8 @@ namespace Neo.SmartContract
 
         private static bool Delete(string domain)
         {
-        	// To do
+            // To do
+            return false;
         }
     }
 }
@@ -295,35 +317,44 @@ The `Runtime.CheckWitness` method accepts a single parameter which represents th
 Usually this method is used to check whether an specified address is the the contract caller,  and then the address can be used to do store change or something else.
 
 
-Inside our `DNS smart contract`, the `Register` function is firstly check if the owner is the same as the one who invoke the contract. Here we use the `Runtime.CheckWitness` function. Then we try to fetch the domain owner first to see if the domain is already exists in the storage. If not, we can store our domain->owner pair using the `Storage.Put`method.
+Inside our `DNS smart contract`, the `Register` function first checks if the owner is the same as the one who invokes the contract. Here we use the `Runtime.CheckWitness` function. Then we try to fetch the domain owner first to see if the domain already exists in the storage. If not, we can store our domain->owner pair using the `Storage.Put` method.
 
 ```csharp
-private static bool Register(string domain, byte[] owner){
-     if (!Runtime.CheckWitness(owner))
-     	return false;
-     byte[] value = Storage.Get(Storage.CurrentContext, domain);
-     if (value != null)
-     	return false;
-     Storage.Put(Storage.CurrentContext, domain, owner);
-     return true;
- }
+private static bool Register(string domain, UInt160 owner)
+{
+    if (!Runtime.CheckWitness(owner))
+        return false;
+    byte[] value = Storage.Get(Storage.CurrentContext, domain);
+    if (value != null)
+        return false;
+    Storage.Put(Storage.CurrentContext, domain, owner);
+    return true;
+}
 ```
+
+**Neo N3 Note:** `Runtime.CheckWitness` in Neo N3 accepts a `UInt160` parameter:
 
 
 Similar to the Register method, the Delete function check the owner first and if it exists and it is the same as the one who invoke the contract, delete the pair using the `Storage.Delete`method.  This method is leaving as a question in the end of this part.
 
-##  Events
-In Smart contract, events are a way  to communicate that something happened on the blockchain to your app front-end (or back-end), which can be 'listening' for certain events and take action when they happen. You might use this to update an external database, do analytics, or update a UI. In some specified contract standard,  it defined some events should be posted. It is not cover in this page, but is very useful for the other smart contracts. For instance, in the NEP-5 Token, the events `transfer` should be fired when user invoke the transfer function.
+## Events
+In smart contracts, events are a way to communicate that something happened on the blockchain to your app front-end (or back-end), which can be 'listening' for certain events and take action when they happen. You might use this to update an external database, do analytics, or update a UI. In some specified contract standards, it defines some events that should be posted. For instance, in the NEP-17 Token, the event `Transfer` should be fired when users invoke the transfer function.
 
 ```csharp
-//Should be called when caller transfer nep-5 asset.
-public static event transfer(byte[] from, byte[] to, BigInteger amount)
+// Should be called when caller transfers NEP-17 asset
+public static event Action<UInt160, UInt160, BigInteger> Transfer;
+```
+
+**Neo N3 Event Syntax:**
+```csharp
+[DisplayName("Transfer")]
+public static event Action<UInt160, UInt160, BigInteger> OnTransfer;
 ```
 ## Assignment
-In the above `DNS` smart contract, there is a delete method. The general idea is  check the owner first and if it exists and it is the same as the one who invoke the contract, delete the pair using the `Storage.Delete`method. Please finish this function.
+In the above `DNS` smart contract, there is a delete method. The general idea is: check the owner first, and if it exists and it is the same as the one who invokes the contract, delete the pair using the `Storage.Delete` method. Please finish this function.
 
 ## Next step
-Great! Your just finished your first smart contract. Now let us move on to the [NEP 5 Token](What_is_nep5.md)
+Great! You just finished your first smart contract. Now let us move on to the [NEP-17 Token](What_is_nep5.md)
 
 ## Previous Step
 If you are not familiar with how to compile and deploy the smart contract, you may first click [here](Development_compile.md).

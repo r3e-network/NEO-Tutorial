@@ -1,232 +1,191 @@
 ---
 layout: post
 lang: cn
-lang-ref: Implementation_of_NEP5
+lang-ref: Implementation_of_NEP17
 ---
 
-# 实现NEP-5
-
+# 实现NEP-17代币 (Neo N3)
 
 >
-> **目的**:  了解NEP-5的基本概念
+> **目的**:  学习如何在Neo N3上实现NEP-17代币
 >
 > **要点**:
 >
-> 1. 根据NEP-5标准来实现每个要点
+> 1. 根据NEP-17标准实现每个要点
 >
-> 2. 在NEO-Gui上使用NEP-5通证
->
+> 2. 使用neo-cli或SDK部署NEP-17通证
 
-首先，我们定义一个只读属性Owner来表示合约的所有者。如下所示，`Owner` 是一个字节数组，长度为 `20` 。
+## Neo N3合约结构
+
+在Neo N3中，智能合约不再使用带有触发器的`Main`方法。相反，合约是继承自`SmartContract`的类，直接暴露公共方法。
+
+首先，让我们设置基本的合约结构：
 
 ```csharp
-// 这里，字符串“xxx”表示所指定的作为所有者的地址。
-private static readonly byte[] Owner = "xxxxxxxxxxxxxxxxxxxxx".ToScriptHash(); //所有者地址
-```
+using Neo;
+using Neo.SmartContract;
+using Neo.SmartContract.Framework;
+using Neo.SmartContract.Framework.Attributes;
+using Neo.SmartContract.Framework.Native;
+using Neo.SmartContract.Framework.Services;
+using System;
+using System.Numerics;
 
-现在我们开始学习一下main方法和触发器:
-
-```csharp
-    public static object Main(string method, object[] args){
-            if (Runtime.Trigger == TriggerType.Verification)
-            {
-                return Runtime.CheckWitness(Owner);
-            }
-            else if (Runtime.Trigger == TriggerType.Application)
-            {
-	            return true;
-            }
+namespace MyToken
+{
+    [DisplayName("MyToken")]
+    [ManifestExtra("Author", "Your Name")]
+    [ManifestExtra("Description", "My NEP-17 Token")]
+    [SupportedStandards("NEP-17")]
+    [ContractPermission("*", "onNEP17Payment")]
+    public class MyTokenContract : SmartContract
+    {
+        // 合约代码在这里
+    }
 }
 ```
-这里，main方法接受两个参数。第一个是代表方法名的字符串 `method` ，它是用户将在这个智能合约中调用的nep-5方法。第二个是数组对象 `args`，它表示nep-5方法中使用的参数列表。
 
-这里我们也会对触发器类型进行判断。当触发器类型是 `Verification` 时，它意味着终端用户使用资产交易来调用交易。换句话说，终端用户可能希望将NEO或GAS等全局资产发送到该合约或者从该合约获取这些资产。在这种情况下，我们应该判断调用者(或对合约进行签名的地址)是否是所有者。
-
-当触发器类型是 `Application` 时，这意味着应用程序(Web/App)正在通过InvocationTransaction来调用智能合约。在这种情况下，我们应该根据方法值调用其他函数。这部分内容我们之后会补充。
-
-然后我们定义表示名称、符号、小数位的相应函数，这些对于这个合约而言都是固定值。
+## 定义合约所有者
 
 ```csharp
-[DisplayName("name")]
-public static string Name() => "MyToken"; //通证的名称
+[InitialValue("NiHURyS83nX2mpxtA7xq84cGxVbHojj5Wc", ContractParameterType.Hash160)]
+static readonly UInt160 Owner = default;
 ```
 
+**注意：** 在Neo N3中，我们使用`UInt160`类型代替`byte[]`来表示地址。
+
+## 代币属性
+
 ```csharp
-[DisplayName("decimals")]
+public static string Symbol() => "MYT";
+
 public static byte Decimals() => 8;
 ```
 
-```csharp
-[DisplayName("symbol")]
-public static string Symbol() => "MYT"; //通证的符号
-```      
-
-我们还需要定义一个转账事件，该事件也在 `NEP-5` 标准中指定了。
+## 存储键
 
 ```csharp
-[DisplayName("transfer")]
-public static event Action<byte[], byte[], BigInteger> Transferred;
+private static readonly byte[] TotalSupplyKey = new byte[] { 0x00 };
+private static readonly byte[] BalancePrefix = new byte[] { 0x01 };
 ```
 
-现在。让我们定义合约的的totalSupply方法。在此之前，我们应该首先定义一个 `deploy`方法。deploy方法没有在 `NEP-5` 标准中指定，但是应该是智能合约所有者调用的第一个函数，并且只能调用一次。deploy函数的目的是设置 `NEP-5` 通证的 `总供应量` 值，并将所有通证转入到所有者的账户余额中。
-
-需要注意的是，在通证化的智能合约中，资产以键值对的形式存储在存储区中，其中键是地址，值是余额。下面的表格可以说明这一点。
-
-
-
-| 地址 |   值 |
-|--|--|
-| address1 | 1000 |
-| address2 | 200 |
-
-
-
-
+## 转账事件
 
 ```csharp
-//代表总供应量的静态只读值
-private static readonly BigInteger TotalSupplyValue = 10000000000000000;
+[DisplayName("Transfer")]
+public static event Action<UInt160, UInt160, BigInteger> OnTransfer;
 ```
 
+## TotalSupply方法
+
 ```csharp
-[DisplayName("deploy")]
-public static bool Deploy()
+public static BigInteger TotalSupply() => (BigInteger)Storage.Get(Storage.CurrentContext, TotalSupplyKey);
+```
+
+## BalanceOf方法
+
+```csharp
+public static BigInteger BalanceOf(UInt160 account)
 {
-      if (TotalSupply() != 0) return false;
-      StorageMap contract = Storage.CurrentContext.CreateMap(nameof(contract));
-      contract.Put("totalSupply", TotalSupplyValue);
-      StorageMap asset = Storage.CurrentContext.CreateMap(nameof(asset));
-      //合约所有者拥有所有的nep-5通证
-      asset.Put(Owner, TotalSupplyValue);
-      // 当发生NEP-5资产转账时触发该事件
-      Transferred(null, Owner, TotalSupplyValue);
-      return true;
+    if (!account.IsValid)
+        throw new Exception("Invalid account");
+    return (BigInteger)Storage.Get(Storage.CurrentContext, BalancePrefix.Concat(account));
 }
 ```
 
-现在，我们已经在部署阶段定义了总供应量，我们可以实现totalSupply方法了，该方法从存储区中获取totalSupply值。
+## Transfer方法 (NEP-17)
 
+与NEP-5的主要区别是`data`参数：
 
 ```csharp
-[DisplayName("totalSupply")]
-public static BigInteger TotalSupply()
+public static bool Transfer(UInt160 from, UInt160 to, BigInteger amount, object data)
 {
-    StorageMap contract = Storage.CurrentContext.CreateMap(nameof(contract));
-    return contract.Get("totalSupply").AsBigInteger();
+    if (!from.IsValid || !to.IsValid)
+        throw new Exception("Invalid address");
+    if (amount < 0)
+        throw new Exception("Invalid amount");
+    if (!Runtime.CheckWitness(from) && !from.Equals(Runtime.CallingScriptHash))
+        return false;
+    if (BalanceOf(from) < amount)
+        return false;
+    if (from == to)
+        return true;
+
+    // 更新余额
+    if (amount > 0)
+    {
+        UpdateBalance(from, -amount);
+        UpdateBalance(to, amount);
+    }
+
+    // 触发Transfer事件
+    OnTransfer(from, to, amount);
+
+    // 如果 'to' 是合约，调用 onNEP17Payment
+    if (ContractManagement.GetContract(to) != null)
+        Contract.Call(to, "onNEP17Payment", CallFlags.All, from, amount, data);
+
+    return true;
+}
+
+private static void UpdateBalance(UInt160 account, BigInteger amount)
+{
+    var key = BalancePrefix.Concat(account);
+    var balance = (BigInteger)Storage.Get(Storage.CurrentContext, key) + amount;
+    if (balance <= 0)
+        Storage.Delete(Storage.CurrentContext, key);
+    else
+        Storage.Put(Storage.CurrentContext, key, balance);
 }
 ```
 
-让我们设置另一个 `balanceOf` 方法，它获取指定地址所对应账户的 `NEP-5` 余额。
-
+## 部署方法 (铸造初始供应量)
 
 ```csharp
- [DisplayName("balanceOf")]
-public static BigInteger BalanceOf(byte[] account)
+public static void _deploy(object data, bool update)
 {
-	  // 参数校验
-      if (account.Length != 20)
-          throw new InvalidOperationException("The parameter account SHOULD be 20-byte addresses.");
-      StorageMap asset = Storage.CurrentContext.CreateMap(nameof(asset));
-      return asset.Get(account).AsBigInteger();
+    if (update) return;
+    
+    BigInteger totalSupply = 10_000_000_00000000; // 1000万代币，8位小数
+    Storage.Put(Storage.CurrentContext, TotalSupplyKey, totalSupply);
+    Storage.Put(Storage.CurrentContext, BalancePrefix.Concat(Owner), totalSupply);
+    OnTransfer(null, Owner, totalSupply);
 }
 ```
 
-现在，除了转账方法之外，我们几乎已经完成了 `NEP-5` 标准中要求的所有方法，让我们先填充一下main方法。
+`_deploy`方法在合约部署时自动调用。
+
+## OnNEP17Payment (接收者回调)
+
+如果你的合约需要接收NEP-17代币：
 
 ```csharp
-public static object Main(string method, object[] args)
+public static void OnNEP17Payment(UInt160 from, BigInteger amount, object data)
 {
-     if (Runtime.Trigger == TriggerType.Verification)
-     {
-         return Runtime.CheckWitness(Owner);
-     }
-     else if (Runtime.Trigger == TriggerType.Application)
-     {
-	     if (method == "balanceOf") return BalanceOf((byte[])args[0]);
-
-	     if (method == "decimals") return Decimals();
-
-	     if (method == "name") return Name();
-
-	     if (method == "symbol") return Symbol();
-
-	     if (method == "supportedStandards") return SupportedStandards();
-
-	     if (method == "totalSupply") return TotalSupply();
-
-	     if (method == "transfer") return Transfer((byte[])args[0], (byte[])args[1], (BigInteger)args[2]);
-	  }
-	 return false;
+    // 处理接收到的代币
+    // 当代币转入此合约时自动调用
 }
 ```
 
-现在，剩下的唯一方法就是转账函数。转账函数首先要做的是检查参数，并检查合约调用者是否是合约的所有者。如果满足所有要求，就从存储区中获取 `from` 地址所对应账户中的余额，并检查该余额是否能够满足转账的数量要求。如果 `NEP-5` 通证的数量足够，则计算并更新 `from` 账户和 `to` 账户中的余额。
+## 编译和部署
 
-```csharp
-private static bool Transfer(byte[] from, byte[] to, BigInteger amount, byte[] callscript)
-{
-      //参数校验
-      if (from.Length != 20 || to.Length != 20)
-          throw new InvalidOperationException("The parameters from and to SHOULD be 20-byte addresses.");
-      if (amount <= 0)
-          throw new InvalidOperationException("The parameter amount MUST be greater than 0.");
-      if (!Runtime.CheckWitness(from))
-          return false;
-      StorageMap asset = Storage.CurrentContext.CreateMap(nameof(asset));
-      var fromAmount = asset.Get(from).AsBigInteger();
-      if (fromAmount < amount)
-          return false;
-      if (from == to)
-          return true;
-
-      //减少发送方的账户余额
-      if (fromAmount == amount)
-          asset.Delete(from);
-      else
-          asset.Put(from, fromAmount - amount);
-
-      //增加接收方的账户余额
-      var toAmount = asset.Get(to).AsBigInteger();
-      asset.Put(to, toAmount + amount);
-
-      Transferred(from, to, amount);
-      return true;
-  }
+1. 安装neo-devpack-dotnet：
+```bash
+dotnet new install Neo.SmartContract.Template
+dotnet new neo-contract -n MyToken
 ```
 
-现在NEP-5通证已经完成，可以在我们的[私有链](https://github.com/neo-ngd/NEO-Tutorial/blob/steven/smartContract/Development_set_up.md)上测试了。你可以点击[此处](https://github.com/neo-ngd/NEO-Tutorial/blob/steven/smartContract/sourceCode/NEP5.cs)查看源码。
+2. 编译：
+```bash
+dotnet build
+```
 
-编译NEP5.cs并获得avm文件后，部署它。如果合约已经部署在区块链上的话，那么首先调用deploy方法，该方法会初始化通证的totalSupply变量。
-
-<p align="center">
-	<img src="imgs/20190222-153331.png">
-</p>
-<p align="center">
-	<img src="imgs/20190222-1https://peterlinx.github.io/DataTransformationTools/53712.png">
-</p>
-
-现在，在NEP-GUI中单击 `高级` -> `选项` ，添加合约的scriptHash，你可以在资产选项卡中查看NEP-5资产。
-
-<p align="center">
-	<img src="imgs/20190222-153941.png"/>
-</p>
-
-让我们测试一下NEP-5标准中的另一个转账方法。打开调用功能选项卡并填写相应的参数。字符串部分是要调用的智能合约方法。这里是 `transfer` 。在数组中，参数是 `from` 、`to` 、`amount` 。`from` 地址和 `to` 地址的格式是字节数组，可以由钱包地址进行转换。例如，点击这个[工具链接](https://peterlinx.github.io/DataTransformationTools/)，它可以将钱包地址转换成字节数组。对于 `amount` 参数，不要忘了将小数乘以10^8。这里我想把我的NEP-5通证从我的账户转250000000个到其他账户。
-
-<p align="center">
-	<img src="imgs/20190222-155235.png"/>
-</p>
-
-待交易被记录且确认后，打开目标地址的钱包，查看更新后的NEP-5余额。
-
-<p align="center">
-	<img src="imgs/20190222-155608.png">
-</p>
-
-## 作业
-
-自己定义一个新的NEP-5通证。
+3. 使用neo-cli或neon-js部署
 
 ## 下一步骤
 
-在本教程中，你已经了解了NEP-5的标准，以及如何通过定义自己的通证来实现NEP-5标准。现在我们可以扩展这一步骤来[发起我们的通证，并公开发布](Give_an_ITO.md)。
+现在你可以扩展此功能来[发起代币销售](Give_an_ITO.md)。
+
+## 上一步
+
+了解更多关于[NEP-17标准](What_is_nep5.md)。

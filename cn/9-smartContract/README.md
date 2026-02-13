@@ -12,22 +12,12 @@
 		- [Method and triggers](Smart_Contract_basics.md#trigger)
 		- [Events](Smart_Contract_basics.md#events)
 
-	- Make your NEP-5 Token
-		- [Introduction to NEP-5](What_is_nep5.md#introduction-to-nep-5)
-		- [Implementation of NEP-5](What_is_nep5.md#implementation-of-nep-5)
-		- [ITO(Initial Token Offering)](Give_an_ITO.md#give-an-ito-initial-token-offering)
-		- [Timestamp in blockchain](Give_an_ITO.md#timestamp)
-		- [UTXO basics](UTXO.md)
+	- Make your NEP-17 Token (Neo N3)
+		- [Introduction to NEP-17](What_is_nep5.md#introduction-to-nep-17)
+		- [Implementation of NEP-17](What_is_nep5.md#implementation-of-nep-17)
+		- [Token Sale (ITO)](Give_an_ITO.md#give-an-ito-initial-token-offering)
 		- [Minting Tokens](Give_an_ITO.md#minttoken)
-	- CGAS
-		- [What is CGAS](cgas/1_what_is_cgas.md)
-		- [Global asset and NEP-5](cgas/2_global_asset_and_nep5.md)
-		- [UTXO model](cgas/3_utxo_model.md)
-		- [Trigger](cgas/4_trigger.md)
-		- [Mint and Refund](cgas/5_minttokens_and_refund.md)
-		- [Signature and Verification](cgas/6_signature_and_verification.md)
-		- [Transaction Invocation](cgas/7_invocation.md)
-- Write NEO smart contract with Python
+- Write Neo N3 smart contract with other languages
 	- what is Neo-python
 	- Prepare the Neo-python development procedure environment
 	- NEO python basics

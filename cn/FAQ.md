@@ -13,9 +13,11 @@
 
 ## 钱包相关
 
-### Q1: NEO地址为什么都以字母"A"开头？
+### Q1: NEO地址为什么都以字母"N"开头？
 
-**A:** NEO地址使用Base58Check编码，版本前缀为`0x17`。经过Base58编码后，这个前缀会产生以"A"开头的地址。这是NEO的设计选择，便于用户识别NEO地址。
+**A:** Neo N3地址使用Base58Check编码，版本前缀为`0x35`。经过Base58编码后，这个前缀会产生以"N"开头的地址。这是Neo N3的设计选择，便于用户识别Neo N3地址。
+
+**注意：** Neo Legacy (N2) 地址以"A"开头，使用版本前缀`0x17`。
 
 ### Q2: 私钥和WIF有什么区别？
 
@@ -103,10 +105,12 @@ print(is_valid_neo_address("AQVh2pG732YvtNaxEGkQUei3YA4cvo7d2i"))  # True
 
 | 特性 | UTXO模型 | 账户模型 |
 |------|----------|----------|
-| 使用资产 | NEO, GAS | NEP-5代币 |
+| 使用资产 | NEO, GAS (Neo Legacy) | NEP-17代币, NEO, GAS (Neo N3) |
 | 余额计算 | 累加未花费输出 | 直接读取余额 |
 | 并行处理 | 更容易 | 需要锁定 |
 | 隐私性 | 较好 | 较差 |
+
+**注意：** Neo N3使用账户模型（类似以太坊），而不是UTXO模型。
 
 ### Q8: 交易费用如何计算？
 
@@ -135,7 +139,7 @@ print(is_valid_neo_address("AQVh2pG732YvtNaxEGkQUei3YA4cvo7d2i"))  # True
 import requests
 import json
 
-def get_balance(address: str, rpc_url: str = "http://localhost:10332") -> dict:
+def get_balance(address: str, rpc_url: str = "https://testnet1.neo.coz.io:443") -> dict:
     payload = {
         "jsonrpc": "2.0",
         "method": "getnep17balances",
@@ -150,16 +154,22 @@ balance = get_balance("NXV7ZhHiyM1aHXwpVsRZC6BwNFP2jghXAq")
 print(json.dumps(balance, indent=2))
 ```
 
+**Neo N3 RPC端口：**
+- 测试网：20332 (REST: 80)，例如 `https://testnet1.neo.coz.io:443`
+- 主网：10332 (REST: 80)，例如 `https://mainnet1.neo.coz.io:443`
+
 ---
 
 ## 智能合约相关
 
 ### Q11: NEP-5和NEP-17有什么区别？
 
-**A:** NEP-17是NEO 3.0的代币标准，相比NEP-5：
-- 使用`onNEP17Payment`回调
-- 支持更多功能
-- 更好的安全性
+**A:** NEP-17是Neo N3的代币标准，取代了Neo Legacy中的NEP-5。主要区别：
+- 使用`UInt160`类型代替`byte[]`表示地址
+- 使用`onNEP17Payment`回调代替检查`payable`标志
+- 添加了`data`参数用于合约交互
+- 使用`PascalCase`方法命名代替`camelCase`
+- 使用`Action<T1, T2, T3>`和`DisplayName`属性定义事件
 
 ### Q12: 智能合约部署失败怎么办？
 
@@ -181,26 +191,26 @@ print(json.dumps(balance, indent=2))
 
 **A:**
 ```csharp
-// C# 智能合约示例
+// Neo N3 C# 智能合约示例
 using Neo.SmartContract.Framework;
 using Neo.SmartContract.Framework.Services;
 
 public class StorageExample : SmartContract
 {
     // 存储数据
-    public static void Put(string key, string value)
+    public static void PutData(string key, string value)
     {
         Storage.Put(Storage.CurrentContext, key, value);
     }
     
     // 读取数据
-    public static string Get(string key)
+    public static string GetData(string key)
     {
-        return Storage.Get(Storage.CurrentContext, key);
+        return Storage.Get(Storage.CurrentContext, key).TryParse();
     }
     
     // 删除数据
-    public static void Delete(string key)
+    public static void DeleteData(string key)
     {
         Storage.Delete(Storage.CurrentContext, key);
     }
@@ -211,19 +221,21 @@ public class StorageExample : SmartContract
 
 **A:**
 ```csharp
+// Neo N3 智能合约示例
 using Neo.SmartContract.Framework;
 
 public class EventExample : SmartContract
 {
-    // 定义事件
-    public static event Action<byte[], byte[], BigInteger> Transfer;
+    // 使用Action<T1, T2, T3>定义事件，配合DisplayName属性
+    [DisplayName("Transfer")]
+    public static event Action<UInt160, UInt160, BigInteger> OnTransfer;
     
-    public static bool DoTransfer(byte[] from, byte[] to, BigInteger amount)
+    public static bool DoTransfer(UInt160 from, UInt160 to, BigInteger amount)
     {
         // 业务逻辑...
         
         // 触发事件
-        Transfer(from, to, amount);
+        OnTransfer(from, to, amount);
         return true;
     }
 }
@@ -264,7 +276,7 @@ public class EventExample : SmartContract
 ```python
 import requests
 
-def get_block(index_or_hash, rpc_url="http://localhost:10332"):
+def get_block(index_or_hash, rpc_url="https://testnet1.neo.coz.io:443"):
     payload = {
         "jsonrpc": "2.0",
         "method": "getblock",

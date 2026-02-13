@@ -4,99 +4,145 @@ lang: en
 lang-ref: Development_compile
 ---
 
-# Compile and Deploy the Smart Contract
+# Compile and Deploy the Smart Contract (Neo N3)
 
 >
-> **Objective**:  Know the process of compile, deploy and invoke the smart contract
+> **Objective**: Know the process of compiling, deploying, and invoking the smart contract
 >
 > **Main points**:
 >
 > 1. Compile the smart contract to AVM
 >
-> 2. Deploy the smart contract use the GUI
+> 2. Deploy the smart contract using neo-cli or SDK
 >
 > 3. Invoke the smart contract and get the result
 >
 
 
-## Compiling contract file
+## Compiling the Smart Contract
 
-Let's go back to the visual studio and start to compile this simple project.
+Let's compile the project using the .NET CLI:
 
- <p align="center">
-  <img src="imgs/20190219-120735.png" />
- </p>
+```bash
+dotnet build
+```
 
+When the compilation is done, the Neo N3 smart contract file `MyContract.avm` is generated in the `bin/Debug/netstandard2.1/` (or `bin/Release/netstandard2.1/`) directory of the project.
 
-Click `generate`->`generate solutions` (hotkeys: Ctrl + Shift + B) in the Visual Studio menu to start compilation.
+The `.abi.json` file is a descriptive file of the smart contract, which contains descriptions of the ScriptHash, entry, parameters, and return values of the contract. More information about the smart contract ABI can be found in [NeoContract ABI](https://github.com/neo-project/proposals/blob/master/nep-3.md).
 
+## Deploying the Contract
 
-When the compilation is done, NEO smart contract file named`NEP5.avm` is generated in the `bin/Debug` directory of the project.
+### Option 1: Using neo-cli
 
+1. Open neo-cli and unlock your wallet:
+```
+neo> open wallet wallet.json
+neo> wallet password password
+```
 
-`SmartContractDemo.abi.json` is a descriptive file of the smart contract, which contains descriptions of the ScriptHash, entry, parameters and return values of the contract. More information about the smart contract ABI can be found in [NeoContract ABI](https://github.com/neo-project/proposals/blob/master/nep-3.mediawiki).
+2. Deploy the contract:
+```
+neo> deploy MyContract.avm
+```
 
- <p align="center">
-  <img src="imgs/20190219-140640.png" />
- </p>
+### Option 2: Using neon-js (JavaScript SDK)
 
- > [!!!!**Note**]
->
-> Given that neon compiles .dll with nep-8 by default, which conflicts with nep-5, thus we need to execute .avm using nep-5 compatible method.
->
-> Open Power Shell or command prompt (CMD), enter bin/Debug directory and input the following command (replace nep5.dll with your own project file):
->
-> ```
-> neon SmartContractDemo.dll --compatible
-> ```
+```javascript
+const { Neon, api, wallet, tx } = require('@cityofzion/neon-js');
+const fs = require('fs');
 
-> The new `SmartContractDemo.avm`  file and `SmartContractDemo.abi.json`  file will overwrite the old files.
+const privateKey = 'your-private-key-here';
+const script = fs.readFileSync('./MyContract.avm');
 
+const account = new wallet.Account(privateKey);
+const client = new api.neo3. NeonRPC('https://testnet1.neo.coz.io:443');
 
-## Deploy the contract
+async function deploy() {
+  const txHash = await client.doInvoke({
+    signers: [{ account: account.scriptHash, scopes: 'CalledByEntry' }],
+    operations: [
+      new tx.TransactionContractParameter({
+        type: 'Hash',
+        value: '0x0000000000000000000000000000000000000000'
+      }),
+      new tx.TransactionAttribute({
+        type: 'Usage',
+        data: 'Deploy'
+      })
+    ],
+    script: script
+  }, [account]);
+  
+  console.log('Deployment transaction:', txHash);
+}
 
-  <p align="center">
-  <img src="imgs/20190219-140958.png" />
- </p>
+deploy();
+```
 
- We may use NEO-GUI to deploy the newly generated contract file.
+### Option 3: Using neo-python
 
-1. Open 0.json wallet file, click `advance` -> `deploy contracts`.
+```python
+from neo import Neo
+from neo.Wallets import Wallet
 
-2. Click `load` to select the compiled contract file `xxx.avm` in the contract deployment dialog.
+# Deploy contract
+wallet = Wallet('wallet.json')
+wallet.open()
 
-	*Copy the contract script hash displayed under the code box for late use in contract invocation.*
+# Deploy using neo-cli API
+# POST to /v1/contracts/deploy
+```
 
-3. Fill in the params in the information and meta data fields.
+## Invoking the Contract
 
-   For this contract, the argument is written as 0710 and the return value is 05.
+Now you may invoke the smart contract you just deployed.
 
-   Detailed rules can be referred to  [Smart Contract Parameters and Return Values](http://docs.neo.org/docs/zh-cn/sc/Parameter.html)。
+### Using neo-cli
 
-   Check the box of `required to create a storage area`/
+1. Get the contract script hash (displayed after deployment)
+2. Invoke the contract:
+```
+neo> invokefunction <script-hash> <method> [params]
+```
 
-   No need to check the options` require dynamic invocation`.
+Example - invoking a NEP-17 token's `balanceOf` method:
+```
+neo> invokefunction 0x1234567890abcdef1234567890abcdef12345678 balanceOf NWuHQdxabXPdC6vVwJhxjYELDQPqc1d4TG
+```
 
-4. After all the params are defined, click `deploy` -> `test` -> `invoke`.
+### Using neon-js
 
+```javascript
+const { Neon, api, wallet } = require('@cityofzion/neon-js');
 
-#### Invoking contract
+async function invoke() {
+  const account = new wallet.Account('your-private-key');
+  const client = new api.neo3.NeonRPC('https://testnet1.neo.coz.io:443');
+  
+  const result = await client.invokeFunction(
+    '0xcontract-script-hash',
+    'methodName',
+    [
+      { type: 'Hash160', value: account.scriptHash }
+    ]
+  );
+  
+  console.log('Result:', result);
+}
+```
 
-Now you may invoke the smart contract released just recently.
+### Using Neo Express
 
-1. Click `advance` -> `contract call` -> `function call`。
+For local development, [Neo Express](https://github.com/neo-project/neo-express) provides a fast and easy way to deploy and test contracts:
 
-2. Paste the contract scripthash copied in the last step to `ScriptHash` and press search button. Relevant contract information will be displayed automatically.
-
-3. Click `...` beside `arguments` to enter the edit interface. Fill in the argument. In this contract, any arguments is ok because the main method does not use that.
-
-4. Click `trial` to test the contract. If no error is spotted, click `invoke`, which may cost several GAS.
-
-
-If invoke successfully, the gas will be reduced in the account balance.
+```bash
+neo-express deploy MyContract.avm
+neo-express invoke <script-hash> <method> [params]
+```
 
 ## Next Step
-**Congratulations!**, you set up your private network and invoke your first smart contract successfully. Now let's begin to learn [the basic of NEO smart contract and get your first one.](Smart_Contract_basics.md)
+**Congratulations!**, you have set up your private network and invoked your first smart contract successfully. Now let's begin to learn [the basics of NEO smart contracts and create your first one.](Smart_Contract_basics.md)
 
 ## Previous Step
-If you are not set up the IDE yet , you may first click [here](Development_set_up.md).
+If you have not set up the IDE yet, you may first click [here](Development_set_up.md).
